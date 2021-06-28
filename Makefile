@@ -1,13 +1,9 @@
-CXX ?= g++
-CXXFLAGS ?= -Wall -Werror -pedantic --std=c++11 -g
+CXX = g++
+CXXFLAGS = -Wall
+SOURCE = main.cpp printing.cpp
 
-main.exe: main.cpp
-	$(CXX) $(CXXFLAGS) main.cpp -o $@
+main: main.o printing.o
+	$(CXX) -o main $(CXXFLAGS) $(SOURCE) -lrobotcontrol
 
-# disable built-in rules
-.SUFFIXES:
-
-# these targets do not create any files
-.PHONY: clean
-clean :
-	rm -vrf *.o *.exe *.gch *.dSYM *.stackdump *.out.txt
+clean:
+	rm -rf main main.o printing.o
