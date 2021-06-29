@@ -5,8 +5,6 @@
 #include <rc/time.h>
 #include "neue_mavlink_prot.h"
 
-int i = 0;
-
 struct kb_input
 {
     float x;
@@ -41,6 +39,8 @@ int main()
                     command_packets[0].rpy[1], command_packets[0].rpy[2]);
         rc_usleep(MSG_RATE);
     }
+
+    mav_cleanup();
 
     return 0;
 }
