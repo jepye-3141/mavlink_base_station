@@ -1,9 +1,27 @@
 #include <rc/mavlink_udp.h>
 #include <rc/math/quaternion.h>
 #include <rc/time.h>
+#include <netinet/in.h>
+#define NUM_DRONES 1
+#define MSG_RATE 50000
+
+struct address_node
+{
+    int id;
+    int port;
+    struct sockaddr_in address;
+};
+
+struct msg_t
+{
+    float x;
+    float y;
+    float z;
+    double rpy[3];
+};
 
 int mav_init(uint8_t sysid, int dest_id, const char* dest_ip, uint16_t port, uint64_t connection_timeout_us);
 
-int add_msg_to_series(mavlink_message_t msg, int dest_id);
+int send_new_series(struct msg_t new_message[NUM_DRONES]);
 
 int mav_cleanup();
