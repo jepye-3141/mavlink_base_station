@@ -121,6 +121,7 @@ static void* __listen_thread_func(__attribute__((unused)) void* ptr)
 		// do mavlink's silly byte-wise parsing method
 		for(i=0; i<num_bytes_rcvd; ++i){
 			// parse on channel 0 (MAVLINK_COMM_0)
+            printf("buffer component: %x\n", buf[i]);
 			if (mavlink_parse_char(MAVLINK_COMM_0, buf[i], &msg, &parse_status)){
 				// #ifdef DEBUG
 				printf("\nReceived packet: SYSID: %d, MSG ID: %d\n", msg.sysid, msg.msgid);
@@ -159,6 +160,7 @@ static void* __transmit_thread_func(void* arg) {
     int identity = *(int*)arg;
 
     while (shutdown_flag == 0) {
+        printf("%i init",drones_init);
         if(drones_init == NUM_DRONES && (identity == destinations[identity].id)){
             mavlink_message_t temp = msg_series[identity];
             uint8_t buf[BUFFER_LENGTH];
@@ -297,7 +299,7 @@ int send_new_series(struct msg_t new_message[NUM_DRONES])
     }
     copying = true;
     for (int i = 0; i < NUM_DRONES; i++) {
-        printf("writing %i \n", i);
+        // printf("writing %i \n", i);
         msg_series[i] = prep[i];
     }
     copying = false;

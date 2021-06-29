@@ -34,8 +34,8 @@ int main()
     // }
 
     msg_t command_packets[NUM_DRONES];
-    command_packets[0] = {0, 0, 0, {0, 0, 0}};
-    // command_packets[1] = {0, 0, 0, {0, 0, 0}};
+    command_packets[0] = {5, 5, 5, {5, 5, 5}};
+    // command_packets[1] = {7, 7, 7, {7, 7, 7}};
 
     // printKeybindings();
 
