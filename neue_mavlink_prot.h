@@ -2,7 +2,7 @@
 #include <rc/math/quaternion.h>
 #include <rc/time.h>
 #include <netinet/in.h>
-#define NUM_DRONES 1
+#define NUM_DRONES 2
 #define MSG_RATE 50000
 
 struct address_node
@@ -21,6 +21,8 @@ struct msg_t
 };
 
 int mav_init(uint8_t sysid, int dest_id, const char* dest_ip, uint16_t port, uint64_t connection_timeout_us);
+
+int mav_set_callback_all(void (*func)(void));
 
 int send_new_series(struct msg_t new_message[NUM_DRONES]);
 
