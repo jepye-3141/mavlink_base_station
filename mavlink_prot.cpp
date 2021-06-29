@@ -1,4 +1,4 @@
-#include "neue_mavlink_prot.h"
+#include "mavlink_prot.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>

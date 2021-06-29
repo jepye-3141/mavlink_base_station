@@ -2,7 +2,7 @@
 #include <rc/math/quaternion.h>
 #include <rc/time.h>
 #include <netinet/in.h>
-#define NUM_DRONES 1
+#define NUM_DRONES 2
 #define MSG_RATE 50000
 
 struct address_node
