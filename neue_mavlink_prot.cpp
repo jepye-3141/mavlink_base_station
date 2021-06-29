@@ -93,9 +93,9 @@ static void* __listen_thread_func(__attribute__((unused)) void* ptr)
 	mavlink_message_t msg;
 	mavlink_status_t parse_status;
 
-	#ifdef DEBUG
+	// #ifdef DEBUG
 	printf("beginning of __listen_thread_func thread\n");
-	#endif
+	// #endif
 
 	// parse packets as they come in until listening flag set to 0
 	listening_flag=1;
@@ -113,9 +113,11 @@ static void* __listen_thread_func(__attribute__((unused)) void* ptr)
 						connection_lost_callback();
 					}
 				}
+                printf("nothing received");
 				continue;
 			}
 		}
+        printf("attempting parse");
 		// do mavlink's silly byte-wise parsing method
 		for(i=0; i<num_bytes_rcvd; ++i){
 			// parse on channel 0 (MAVLINK_COMM_0)
@@ -270,7 +272,7 @@ int mav_init(uint8_t sysid, int dest_id, const char* dest_ip, uint16_t port, uin
 
     // set destination address
 	/////////////////NEW///////////////////
-    destinations[dest_id - 1].id = dest_id;
+    destinations[dest_id - 1].id = dest_id - 1;
     destinations[dest_id - 1].port = (int)port;
     if(__address_init(&(destinations[dest_id - 1].address), dest_ip, port) != 0){
         fprintf(stderr, "ERROR: in rc_mav_init: couldn't set dest address\n");
@@ -295,6 +297,7 @@ int send_new_series(struct msg_t new_message[NUM_DRONES])
     }
     copying = true;
     for (int i = 0; i < NUM_DRONES; i++) {
+        printf("writing %i \n", i);
         msg_series[i] = prep[i];
     }
     copying = false;
