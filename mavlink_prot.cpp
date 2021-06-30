@@ -50,7 +50,7 @@ static int listening_flag = 0;
 //static int listening_init_flag=0;
 
 bool first_init = true;
-bool copying = false;
+// bool copying = false;
 
 
 
@@ -90,19 +90,21 @@ static void* __listen_thread_func(void* arg)
 	uint64_t time;
 	ssize_t num_bytes_rcvd;
 	uint8_t buf[BUFFER_LENGTH];
-	socklen_t addr_len = sizeof(my_address[0]);
+	socklen_t addr_len = sizeof(my_address[identity]);
 	mavlink_message_t msg;
 	mavlink_status_t parse_status;
 
 	// #ifdef DEBUG
-	printf("beginning of __listen_thread_func thread\n");
+	printf("beginning of listen_thread_func thread %i\n", identity);
 	// #endif
 
 	// parse packets as they come in until listening flag set to 0
 	listening_flag=1;
 	while (shutdown_flag==0){
 		memset(buf, 0, BUFFER_LENGTH);
-		num_bytes_rcvd = recvfrom(sock_fd[identity], buf, BUFFER_LENGTH, 0, (struct sockaddr *) &my_address[identity], &addr_len);
+		num_bytes_rcvd = recvfrom(sock_fd[identity], buf, BUFFER_LENGTH, 0, (struct sockaddr *) &(my_address[identity]), &addr_len);
+
+        printf("%i recreived\n", num_bytes_rcvd);
 
 		// check for timeout
 		if(num_bytes_rcvd <= 0){
@@ -114,7 +116,7 @@ static void* __listen_thread_func(void* arg)
 						connection_lost_callback();
 					}
 				}
-                printf("nothing received");
+                printf("nothing received\n");
 				continue;
 			}
 		}
@@ -159,14 +161,14 @@ static void* __listen_thread_func(void* arg)
 
 static void* __transmit_thread_func(void* arg) {
     int identity = *(int*)arg;
-    mavlink_message_t temp;
-    
+    // mavlink_message_t temp;
+    printf("beginning of transmit thread func thread %i\n", identity);
+
     while (shutdown_flag == 0) {
-        printf("%i init",drones_init);
         if(drones_init == NUM_DRONES && (identity == destinations[identity].id)){
-            if (!copying) {
-                temp = msg_series[identity];
-            }
+            // if (!copying) {
+                // temp = msg_series[identity];
+            // }
 
             uint8_t buf[BUFFER_LENGTH];
             int msg_len, bytes_sent;
@@ -176,12 +178,12 @@ static void* __transmit_thread_func(void* arg) {
             }
 
             memset(buf, 0, BUFFER_LENGTH);
-            if (copying) {
-                 msg_len = mavlink_msg_to_send_buffer(buf, &(temp));
-            }
-            else {
+            // if (copying) {
+            //      msg_len = mavlink_msg_to_send_buffer(buf, &(temp));
+            // }
+            // else {
                 msg_len = mavlink_msg_to_send_buffer(buf, &(msg_series[identity]));
-            }
+            // }
 
             if(msg_len < 0){
                 fprintf(stderr, "ERROR: in rc_mav_send_msg, unable to pack message for sending\n");
@@ -191,8 +193,9 @@ static void* __transmit_thread_func(void* arg) {
             if(bytes_sent != msg_len){
                 perror("ERROR in rc_mav_send_msg failed to write to UDP socket");
             }
+            // printf("sent one\n");
         }
-        usleep(MSG_RATE);
+        usleep(MSG_RATE/100);
     }
     return 0;
 }
@@ -203,10 +206,8 @@ int mav_init(uint8_t sysid, int dest_id, const char* dest_ip, uint16_t port, uin
 {
     int i;
 
-    if(init_flag == 0){
-        for(int k = 0; k < NUM_DRONES; k++) {
-            thread_id[k] = k;
-        }
+    for(int k = 0; k < NUM_DRONES; k++) {
+        thread_id[k] = k;
     }
 
     if(dest_ip==NULL){
@@ -218,64 +219,61 @@ int mav_init(uint8_t sysid, int dest_id, const char* dest_ip, uint16_t port, uin
 		return -1;
 	}
 
-	// first-time initialization
-	if(init_flag==0){
-	
-        // set the connection state as waiting early
-        // this will be change by listening thread
-        connection_state=MAV_CONNECTION_WAITING;
-        connection_timeout_us_current = connection_timeout_us;
+    // set the connection state as waiting early
+    // this will be change by listening thread
+    connection_state=MAV_CONNECTION_WAITING;
+    connection_timeout_us_current = connection_timeout_us;
 
-        // set all the callback pointers to something sane
-        callback_all = NULL;
-        connection_lost_callback = NULL;
-        for(i=0;i<MAX_UNIQUE_MSG_TYPES;i++) callbacks[i] = NULL;
+    // set all the callback pointers to something sane
+    callback_all = NULL;
+    connection_lost_callback = NULL;
+    for(i=0;i<MAX_UNIQUE_MSG_TYPES;i++) callbacks[i] = NULL;
 
-        // set up all global variables to default values
-        for(i=0;i<MAX_UNIQUE_MSG_TYPES;i++){
-            received_flag[i]=0;
-            new_msg_flag[i]=0;
-            us_of_last_msg[i]=UINT64_MAX;
-        }
-        memset(&messages,i,sizeof(mavlink_message_t));
-        us_of_last_msg_any=UINT64_MAX;
-        msg_id_of_last_msg=-1;
+    // set up all global variables to default values
+    for(i=0;i<MAX_UNIQUE_MSG_TYPES;i++){
+        received_flag[i]=0;
+        new_msg_flag[i]=0;
+        us_of_last_msg[i]=UINT64_MAX;
+    }
 
-        // open socket for UDP packets
-        if((sock_fd[dest_id - 1]=socket(AF_INET, SOCK_DGRAM, 0)) < 0){
-            perror("ERROR: in rc_mav_init: ");
-            return -1;
-        }
+    memset(&messages,i,sizeof(mavlink_message_t));
+    us_of_last_msg_any=UINT64_MAX;
+    msg_id_of_last_msg=-1;
 
-        // socket timeout should be half the connection timeout detection window
-        rcv_timeo.tv_sec = (connection_timeout_us/2)/1000000;
-        rcv_timeo.tv_usec = (connection_timeout_us/2)%1000000;
-        if(setsockopt(sock_fd[dest_id - 1], SOL_SOCKET, SO_RCVTIMEO, (struct timeval *)&rcv_timeo, sizeof (struct timeval)) < 0){
-            perror("ERROR: in rc_mav_init: ");
-            return -1;
-        }
+    // open socket for UDP packets
+    if((sock_fd[dest_id - 1]=socket(AF_INET, SOCK_DGRAM, 0)) < 0){
+        perror("ERROR: in rc_mav_init: ");
+        return -1;
+    }
 
-        // bind address to listening port
-        if(bind(sock_fd[dest_id - 1], (struct sockaddr *) &my_address[dest_id - 1], sizeof my_address[dest_id - 1]) < 0){
-            perror("ERROR: in rc_mav_init: ");
-            return -1;
-        }    
+    // socket timeout should be half the connection timeout detection window
+    rcv_timeo.tv_sec = (connection_timeout_us/2)/1000000;
+    rcv_timeo.tv_usec = (connection_timeout_us/2)%1000000;
+    if(setsockopt(sock_fd[dest_id - 1], SOL_SOCKET, SO_RCVTIMEO, (struct timeval *)&rcv_timeo, sizeof (struct timeval)) < 0){
+        perror("ERROR: in rc_mav_init: ");
+        return -1;
+    }
 
-        // fill out rest of sockaddr_in struct
-        if(__address_init(&my_address[dest_id - 1], 0, port) != 0){
-            fprintf(stderr, "ERROR: in rc_mav_init: couldn't set local address\n");
-            return -1;
-        }
+    // bind address to listening port
+    if(bind(sock_fd[dest_id - 1], (struct sockaddr *) &(my_address[dest_id - 1]), sizeof my_address[dest_id - 1]) < 0){
+        perror("ERROR: in rc_mav_init: ");
+        return -1;
+    }    
 
-        // signal initialization finished
-        init_flag=1;
-        system_id=sysid;
+    // fill out rest of sockaddr_in struct
+    if(__address_init(&(my_address[dest_id - 1]), 0, port) != 0){
+        fprintf(stderr, "ERROR: in rc_mav_init: couldn't set local address\n");
+        return -1;
+    }
 
-        // spawn listener thread
-        if(rc_pthread_create(&listener_thread[dest_id - 1], __listen_thread_func, (void*)&(thread_id[dest_id - 1]), SCHED_OTHER, 0) < 0){
-            fprintf(stderr,"ERROR: in rc_mav_init, couldn't start listening thread\n");
-            return -1;
-        }
+    // signal initialization finished
+    init_flag=1;
+    system_id=sysid;
+
+    // spawn listener thread
+    if(rc_pthread_create(&(listener_thread[dest_id - 1]), __listen_thread_func, (void*)&(thread_id[dest_id - 1]), SCHED_OTHER, 0) < 0){
+        fprintf(stderr,"ERROR: in rc_mav_init, couldn't start listening thread\n");
+        return -1;
     }
 
     // set destination address
@@ -303,12 +301,12 @@ int send_new_series(struct msg_t new_message[NUM_DRONES])
         rc_quaternion_from_tb_array(new_message[i].rpy, (double*)q);
         mavlink_msg_att_pos_mocap_pack(system_id, MAV_COMP_ID_ALL, &prep[i], __us_since_boot(), q, new_message[i].x, new_message[i].y, new_message[i].z);
     }
-    copying = true;
+    // copying = true;
     for (int i = 0; i < NUM_DRONES; i++) {
         // printf("writing %i \n", i);
         msg_series[i] = prep[i];
     }
-    copying = false;
+    // copying = false;
     return 0;
 }
 
