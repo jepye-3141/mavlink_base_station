@@ -52,6 +52,8 @@ static int listening_flag = 0;
 bool first_init = true;
 // bool copying = false;
 
+mavlink_att_pos_mocap_t data[NUM_DRONES];
+
 
 
 struct address_node destinations[NUM_DRONES];
@@ -124,7 +126,7 @@ static void* __listen_thread_func(void* arg)
 		// do mavlink's silly byte-wise parsing method
 		for(i=0; i<num_bytes_rcvd; ++i){
 			// parse on channel 0 (MAVLINK_COMM_0)
-            printf("buffer component: %x\n", buf[i]);
+            // printf("buffer component: %x\n", buf[i]);
 			if (mavlink_parse_char(MAVLINK_COMM_0, buf[i], &msg, &parse_status)){
 				// #ifdef DEBUG
 				printf("\nReceived packet: SYSID: %d, MSG ID: %d\n", msg.sysid, msg.msgid);
@@ -140,7 +142,7 @@ static void* __listen_thread_func(void* arg)
 				connection_state = MAV_CONNECTION_ACTIVE;
 
 				// save local copy of message
-				messages[msg.msgid]=msg;
+				messages[identity]=msg;
 
 				// run the generic callback
 				if(callback_all!=NULL) callback_all();
@@ -148,6 +150,16 @@ static void* __listen_thread_func(void* arg)
 				// run the msg-specific callback
 				if(callbacks[msg.msgid]!=NULL) callbacks[msg.msgid]();
                 printf("Got one, by god!");
+
+                mavlink_message_t temp_in = msg;
+                mavlink_att_pos_mocap_t temp_out;
+                
+                mavlink_msg_att_pos_mocap_decode(&temp_in, &temp_out);
+                data[identity] = temp_out;
+                printf("%f | %f | %f | %f | %f | %f | %f\n", 
+                        data[identity].x, data[identity].y, 
+                        data[identity].z, data[identity].q[0], 
+                        data[identity].q[1], data[identity].q[2], data[identity].q[3]);
 			}
 		}
 	}
@@ -185,6 +197,13 @@ static void* __transmit_thread_func(void* arg) {
                 msg_len = mavlink_msg_to_send_buffer(buf, &(msg_series[identity]));
             // }
 
+            printf("////////////SENDING FROM %i///////////////\n", identity);
+            for(int i = 0; i < msg_len; i++) {
+                printf("buffer component: %x\n", buf[i]);
+            }
+            printf("////////////END TRANSMISSION//////////\n");
+
+
             if(msg_len < 0){
                 fprintf(stderr, "ERROR: in rc_mav_send_msg, unable to pack message for sending\n");
             }
@@ -195,7 +214,7 @@ static void* __transmit_thread_func(void* arg) {
             }
             // printf("sent one\n");
         }
-        usleep(MSG_RATE/100);
+        usleep(MSG_RATE);
     }
     return 0;
 }
@@ -295,17 +314,14 @@ int mav_init(uint8_t sysid, int dest_id, const char* dest_ip, uint16_t port, uin
 
 int send_new_series(struct msg_t new_message[NUM_DRONES])
 {
-    mavlink_message_t prep[NUM_DRONES];
+    mavlink_message_t prep;
     for (int i = 0; i < NUM_DRONES; i++) {
         float q[4];
-        rc_quaternion_from_tb_array(new_message[i].rpy, (double*)q);
-        mavlink_msg_att_pos_mocap_pack(system_id, MAV_COMP_ID_ALL, &prep[i], __us_since_boot(), q, new_message[i].x, new_message[i].y, new_message[i].z);
+        rc_quaternion_from_tb_array((new_message[i]).rpy, (double*)q);
+        mavlink_msg_att_pos_mocap_pack(system_id, MAV_COMP_ID_ALL, &(prep), __us_since_boot(), q, (new_message[i]).x, (new_message[i]).y, (new_message[i]).z);
+        msg_series[i] = prep;
     }
-    // copying = true;
-    for (int i = 0; i < NUM_DRONES; i++) {
-        // printf("writing %i \n", i);
-        msg_series[i] = prep[i];
-    }
+    
     // copying = false;
     return 0;
 }
