@@ -22,8 +22,8 @@
 
 // connection stuff
 static int init_flag = 0;
-static int sock_fd;
-static struct sockaddr_in my_address;
+static int sock_fd[NUM_DRONES];
+static struct sockaddr_in my_address[NUM_DRONES];
 static uint8_t system_id;
 struct timeval rcv_timeo;
 
@@ -44,7 +44,7 @@ static mavlink_message_t messages[MAX_UNIQUE_MSG_TYPES];
 rc_mav_connection_state_t connection_state;
 
 // thread startup and shutdown flags
-static pthread_t listener_thread;
+static pthread_t listener_thread[NUM_DRONES];
 static int shutdown_flag = 0;
 static int listening_flag = 0;
 //static int listening_init_flag=0;
@@ -83,8 +83,9 @@ int __address_init(struct sockaddr_in* address, const char* dest_ip, uint16_t po
 	return 0;
 }
 
-static void* __listen_thread_func(__attribute__((unused)) void* ptr)
+static void* __listen_thread_func(void* arg)
 {
+    int identity = *(int*)arg;
 	int i;
 	uint64_t time;
 	ssize_t num_bytes_rcvd;
@@ -101,7 +102,7 @@ static void* __listen_thread_func(__attribute__((unused)) void* ptr)
 	listening_flag=1;
 	while (shutdown_flag==0){
 		memset(buf, 0, BUFFER_LENGTH);
-		num_bytes_rcvd = recvfrom(sock_fd, buf, BUFFER_LENGTH, 0, (struct sockaddr *) &my_address, &addr_len);
+		num_bytes_rcvd = recvfrom(sock_fd[identity], buf, BUFFER_LENGTH, 0, (struct sockaddr *) &my_address[identity], &addr_len);
 
 		// check for timeout
 		if(num_bytes_rcvd <= 0){
@@ -181,7 +182,7 @@ static void* __transmit_thread_func(void* arg) {
             if(msg_len < 0){
                 fprintf(stderr, "ERROR: in rc_mav_send_msg, unable to pack message for sending\n");
             }
-            bytes_sent = sendto(sock_fd, buf, msg_len, 0, (struct sockaddr *) &(destinations[identity].address),
+            bytes_sent = sendto(sock_fd[identity], buf, msg_len, 0, (struct sockaddr *) &(destinations[identity].address),
                                     sizeof (destinations[identity].address));
             if(bytes_sent != msg_len){
                 perror("ERROR in rc_mav_send_msg failed to write to UDP socket");
@@ -237,27 +238,28 @@ int mav_init(uint8_t sysid, int dest_id, const char* dest_ip, uint16_t port, uin
         msg_id_of_last_msg=-1;
 
         // open socket for UDP packets
-        if((sock_fd=socket(AF_INET, SOCK_DGRAM, 0)) < 0){
+        if((sock_fd[dest_id - 1]=socket(AF_INET, SOCK_DGRAM, 0)) < 0){
             perror("ERROR: in rc_mav_init: ");
             return -1;
-        }    
-
-        // fill out rest of sockaddr_in struct
-        if(__address_init(&my_address, 0, port) != 0){
-            fprintf(stderr, "ERROR: in rc_mav_init: couldn't set local address\n");
-            return -1;
         }
+
         // socket timeout should be half the connection timeout detection window
         rcv_timeo.tv_sec = (connection_timeout_us/2)/1000000;
         rcv_timeo.tv_usec = (connection_timeout_us/2)%1000000;
-        if(setsockopt(sock_fd, SOL_SOCKET, SO_RCVTIMEO, (struct timeval *)&rcv_timeo, sizeof (struct timeval)) < 0){
+        if(setsockopt(sock_fd[dest_id - 1], SOL_SOCKET, SO_RCVTIMEO, (struct timeval *)&rcv_timeo, sizeof (struct timeval)) < 0){
             perror("ERROR: in rc_mav_init: ");
             return -1;
         }
 
         // bind address to listening port
-        if(bind(sock_fd, (struct sockaddr *) &my_address, sizeof my_address) < 0){
+        if(bind(sock_fd[dest_id - 1], (struct sockaddr *) &my_address[dest_id - 1], sizeof my_address[dest_id - 1]) < 0){
             perror("ERROR: in rc_mav_init: ");
+            return -1;
+        }    
+
+        // fill out rest of sockaddr_in struct
+        if(__address_init(&my_address[dest_id - 1], 0, port) != 0){
+            fprintf(stderr, "ERROR: in rc_mav_init: couldn't set local address\n");
             return -1;
         }
 
@@ -266,7 +268,7 @@ int mav_init(uint8_t sysid, int dest_id, const char* dest_ip, uint16_t port, uin
         system_id=sysid;
 
         // spawn listener thread
-        if(rc_pthread_create(&listener_thread, __listen_thread_func, NULL, SCHED_OTHER, 0) < 0){
+        if(rc_pthread_create(&listener_thread[dest_id - 1], __listen_thread_func, (void*)&(thread_id[dest_id - 1]), SCHED_OTHER, 0) < 0){
             fprintf(stderr,"ERROR: in rc_mav_init, couldn't start listening thread\n");
             return -1;
         }
@@ -316,16 +318,23 @@ int mav_cleanup(void)
 	shutdown_flag=1;
 	listening_flag=0;
 
+    int temp = drones_init;
 	// wait for thread to join
-	ret=rc_pthread_timed_join(listener_thread, NULL, 1.5);
-	if(ret==1) fprintf(stderr,"WARNING in rc_mav_cleanup, joining thread timed out\n");
-    while(drones_init > 0) {
-        ret=rc_pthread_timed_join(drone_threads[drones_init - 1], NULL, 1.5);
+    while(temp > 0) {
+        ret=rc_pthread_timed_join(listener_thread[temp - 1], NULL, 1.5);
 	    if(ret==1) fprintf(stderr,"WARNING in rc_mav_cleanup, joining thread timed out\n");
+        temp--;
+    }
+    temp = drones_init;
+    while(temp > 0) {
+        ret=rc_pthread_timed_join(drone_threads[temp - 1], NULL, 1.5);
+	    if(ret==1) fprintf(stderr,"WARNING in rc_mav_cleanup, joining thread timed out\n");
+        temp--;
+    }
+    while (drones_init > 0) {
+        close(sock_fd[drones_init - 1]);
         drones_init--;
     }
-
-	close(sock_fd);
 	init_flag=0;
 	return ret;
 }
