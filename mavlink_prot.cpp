@@ -120,7 +120,7 @@ static void* __listen_thread_func(void* arg)
 				continue;
 			}
 		}
-        printf("attempting parse");
+        printf("attempting parse\n");
 		// do mavlink's silly byte-wise parsing method
 		for(i=0; i<num_bytes_rcvd; ++i){
 			// parse on channel 0 (MAVLINK_COMM_0)
@@ -246,6 +246,12 @@ int mav_init(uint8_t sysid, int dest_id, const char* dest_ip, uint16_t port, uin
         return -1;
     }
 
+    // fill out rest of sockaddr_in struct
+    if(__address_init(&(my_address[dest_id - 1]), 0, port) != 0){
+        fprintf(stderr, "ERROR: in rc_mav_init: couldn't set local address\n");
+        return -1;
+    }
+
     // socket timeout should be half the connection timeout detection window
     rcv_timeo.tv_sec = (connection_timeout_us/2)/1000000;
     rcv_timeo.tv_usec = (connection_timeout_us/2)%1000000;
@@ -259,12 +265,6 @@ int mav_init(uint8_t sysid, int dest_id, const char* dest_ip, uint16_t port, uin
         perror("ERROR: in rc_mav_init: ");
         return -1;
     }    
-
-    // fill out rest of sockaddr_in struct
-    if(__address_init(&(my_address[dest_id - 1]), 0, port) != 0){
-        fprintf(stderr, "ERROR: in rc_mav_init: couldn't set local address\n");
-        return -1;
-    }
 
     // signal initialization finished
     init_flag=1;
