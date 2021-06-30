@@ -90,7 +90,7 @@ static void* __listen_thread_func(void* arg)
 	uint64_t time;
 	ssize_t num_bytes_rcvd;
 	uint8_t buf[BUFFER_LENGTH];
-	socklen_t addr_len = sizeof(my_address);
+	socklen_t addr_len = sizeof(my_address[0]);
 	mavlink_message_t msg;
 	mavlink_status_t parse_status;
 
@@ -159,11 +159,15 @@ static void* __listen_thread_func(void* arg)
 
 static void* __transmit_thread_func(void* arg) {
     int identity = *(int*)arg;
-
+    mavlink_message_t temp;
+    
     while (shutdown_flag == 0) {
         printf("%i init",drones_init);
         if(drones_init == NUM_DRONES && (identity == destinations[identity].id)){
-            mavlink_message_t temp = msg_series[identity];
+            if (!copying) {
+                temp = msg_series[identity];
+            }
+
             uint8_t buf[BUFFER_LENGTH];
             int msg_len, bytes_sent;
 
