@@ -17,7 +17,7 @@ struct msg_t
     float x;
     float y;
     float z;
-    double rpy[3];
+    float rpy[3];
 };
 
 int mav_init(uint8_t sysid, int dest_id, const char* dest_ip, uint16_t port, uint64_t connection_timeout_us);

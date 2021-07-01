@@ -52,8 +52,7 @@ static int listening_flag = 0;
 bool first_init = true;
 // bool copying = false;
 
-mavlink_att_pos_mocap_t data[NUM_DRONES];
-
+mavlink_simple_sys_control_t data[NUM_DRONES];
 
 
 struct address_node destinations[NUM_DRONES];
@@ -152,14 +151,14 @@ static void* __listen_thread_func(void* arg)
                 printf("Got one, by god!");
 
                 mavlink_message_t temp_in = msg;
-                mavlink_att_pos_mocap_t temp_out;
+                mavlink_simple_sys_control_t temp_out;
                 
-                mavlink_msg_att_pos_mocap_decode(&temp_in, &temp_out);
+                mavlink_msg_simple_sys_control_decode(&temp_in, &temp_out);
                 data[identity] = temp_out;
                 printf("%f | %f | %f | %f | %f | %f | %f\n", 
-                        data[identity].x, data[identity].y, 
-                        data[identity].z, data[identity].q[0], 
-                        data[identity].q[1], data[identity].q[2], data[identity].q[3]);
+                        data[identity].x_pos, data[identity].y_pos, 
+                        data[identity].x_pos, data[identity].rpy[0], 
+                        data[identity].rpy[1], data[identity].rpy[2]);
 			}
 		}
 	}
@@ -218,7 +217,6 @@ static void* __transmit_thread_func(void* arg) {
     }
     return 0;
 }
-
 
 
 int mav_init(uint8_t sysid, int dest_id, const char* dest_ip, uint16_t port, uint64_t connection_timeout_us) 
@@ -316,9 +314,7 @@ int send_new_series(struct msg_t new_message[NUM_DRONES])
 {
     mavlink_message_t prep;
     for (int i = 0; i < NUM_DRONES; i++) {
-        float q[4];
-        rc_quaternion_from_tb_array((new_message[i]).rpy, (double*)q);
-        mavlink_msg_att_pos_mocap_pack(system_id, MAV_COMP_ID_ALL, &(prep), __us_since_boot(), q, (new_message[i]).x, (new_message[i]).y, (new_message[i]).z);
+        mavlink_msg_simple_sys_control_pack(system_id, MAV_COMP_ID_ALL, &(prep), (new_message[i].x), (new_message[i]).y, (new_message[i]).z, 0.0, 0.0, 0.0, 0.0, (new_message[i]).rpy);
         msg_series[i] = prep;
     }
     

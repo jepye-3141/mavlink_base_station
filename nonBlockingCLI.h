@@ -94,7 +94,7 @@ int getch()
 }
 */
 
-int updateState(float &x_d, float &y_d, float &z_d, double &r_d, double &p_d, double &yaw_d) {
+int updateState(float &x_d, float &y_d, float &z_d, float &r_d, float &p_d, float &yaw_d) {
     if (_kbhit()) {
         switch (getchar()) {
             case 'x': 
