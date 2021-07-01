@@ -52,7 +52,7 @@ static int listening_flag = 0;
 bool first_init = true;
 // bool copying = false;
 
-mavlink_simple_sys_control_t data[NUM_DRONES];
+mavlink_simple_system_control_t data[NUM_DRONES];
 
 
 struct address_node destinations[NUM_DRONES];
@@ -151,11 +151,11 @@ static void* __listen_thread_func(void* arg)
                 printf("Got one, by god!");
 
                 mavlink_message_t temp_in = msg;
-                mavlink_simple_sys_control_t temp_out;
+                mavlink_simple_system_control_t temp_out;
                 
-                mavlink_msg_simple_sys_control_decode(&temp_in, &temp_out);
+                mavlink_msg_simple_system_control_decode(&temp_in, &temp_out);
                 data[identity] = temp_out;
-                printf("%f | %f | %f | %f | %f | %f | %f\n", 
+                printf("%g | %g | %g | %g | %g | %g | %g\n", 
                         data[identity].x_pos, data[identity].y_pos, 
                         data[identity].x_pos, data[identity].rpy[0], 
                         data[identity].rpy[1], data[identity].rpy[2]);
@@ -196,7 +196,7 @@ static void* __transmit_thread_func(void* arg) {
                 msg_len = mavlink_msg_to_send_buffer(buf, &(msg_series[identity]));
             // }
 
-            printf("////////////SENDING FROM %i///////////////\n", identity);
+            printf("////////////SENDING %u FROM %i///////////////\n", msg_len, identity);
             for(int i = 0; i < msg_len; i++) {
                 printf("buffer component: %x\n", buf[i]);
             }
@@ -314,7 +314,7 @@ int send_new_series(struct msg_t new_message[NUM_DRONES])
 {
     mavlink_message_t prep;
     for (int i = 0; i < NUM_DRONES; i++) {
-        mavlink_msg_simple_sys_control_pack(system_id, MAV_COMP_ID_ALL, &(prep), (new_message[i].x), (new_message[i]).y, (new_message[i]).z, 0.0, 0.0, 0.0, 0.0, (new_message[i]).rpy);
+        mavlink_msg_simple_system_control_pack(system_id, MAV_COMP_ID_ALL, &(prep), (new_message[i].x), (new_message[i]).y, (new_message[i]).z, 0.0, 0.0, 0.0, (new_message[i]).rpy, 0.0, 0.0, 0.0, 0.0);
         msg_series[i] = prep;
     }
     
