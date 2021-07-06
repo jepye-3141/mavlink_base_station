@@ -11,9 +11,12 @@ typedef struct waypoint_t
     double x[MAX_DRONES];
     double y[MAX_DRONES];
     double z[MAX_DRONES];
-    double r[MAX_DRONES];
-    double p[MAX_DRONES];
-    double yaw[MAX_DRONES];
+    double x_dot[MAX_DRONES];
+    double y_dot[MAX_DRONES];
+    double z_dot[MAX_DRONES];
+    // double r[MAX_DRONES];
+    // double p[MAX_DRONES];
+    // double yaw[MAX_DRONES];
     double t;                 ///< time
     int flag;  ///< flag to specify state transitions, etc. (included to "future proof")
 

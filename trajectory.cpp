@@ -114,8 +114,8 @@ static int __read_waypoints(FILE* fd)
         for (int i = 0; i < MAX_DRONES; i++) {
             rcount += fscanf(fd, "%lf %lf %lf %lf %lf %lf",
                 &path.waypoints[waypoint_num].x[i], &path.waypoints[waypoint_num].y[i], 
-                &path.waypoints[waypoint_num].z[i], &path.waypoints[waypoint_num].r[i], 
-                &path.waypoints[waypoint_num].p[i], &path.waypoints[waypoint_num].yaw[i]);
+                &path.waypoints[waypoint_num].z[i], &path.waypoints[waypoint_num].x_dot[i], 
+                &path.waypoints[waypoint_num].y_dot[i], &path.waypoints[waypoint_num].z_dot[i]);
         }
                     
         printf("I got %i on %i\n", rcount, waypoint_num);

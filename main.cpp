@@ -60,9 +60,12 @@ int main()
         command_packets[0].x = path.waypoints[i].x[0];
         command_packets[0].y = path.waypoints[i].y[0];
         command_packets[0].z = path.waypoints[i].z[0];
-        command_packets[0].rpy[0] = path.waypoints[i].r[0];
-        command_packets[0].rpy[1] = path.waypoints[i].p[0];
-        command_packets[0].rpy[2] = path.waypoints[i].yaw[0];
+        command_packets[0].x_dot = path.waypoints[i].x_dot[0];
+        command_packets[0].y_dot = path.waypoints[i].y_dot[0];
+        command_packets[0].z_dot = path.waypoints[i].z_dot[0];
+        command_packets[0].rpy[0] = 0;
+        command_packets[0].rpy[1] = 0;
+        command_packets[0].rpy[2] = 0;
 
         send_new_series(command_packets);
         rc_usleep(MSG_RATE);

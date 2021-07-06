@@ -17,6 +17,9 @@ struct msg_t
     float x;
     float y;
     float z;
+    float x_dot;
+    float y_dot;
+    float z_dot;
     float rpy[3];
 };
 
