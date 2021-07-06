@@ -106,25 +106,28 @@ static int __read_waypoints(FILE* fd)
     int rcount = 0;
     int waypoint_num = 0;
 
-    while (rcount != EOF)
+    while (rcount > -1)
     {
-        // Read formated file line (13 doubles and 1 int)
-        rcount = fscanf(fd, "%lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %i ",
-            &path.waypoints[waypoint_num].t, &path.waypoints[waypoint_num].x,
-            &path.waypoints[waypoint_num].y, &path.waypoints[waypoint_num].z,
-            &path.waypoints[waypoint_num].xd, &path.waypoints[waypoint_num].yd,
-            &path.waypoints[waypoint_num].zd, &path.waypoints[waypoint_num].roll,
-            &path.waypoints[waypoint_num].pitch, &path.waypoints[waypoint_num].yaw,
-            &path.waypoints[waypoint_num].p, &path.waypoints[waypoint_num].q,
-            &path.waypoints[waypoint_num].r, &path.waypoints[waypoint_num].flag);
+        rcount = 0;
 
-        // If not end of file, but an invalid read (waypoints have 14 values)
-        if (rcount != EOF && rcount != 14)
-        {
-            fprintf(stderr, "ERROR: invalid waypoint read from line: %i\n",
-                waypoint_num + 1);  // lines 1 indexed, waypoints zero indexed
-            return -1;
+        // Read formated file line (31 doubles)
+        for (int i = 0; i < MAX_DRONES; i++) {
+            rcount += fscanf(fd, "%lf %lf %lf %lf %lf %lf",
+                &path.waypoints[waypoint_num].x[i], &path.waypoints[waypoint_num].y[i], 
+                &path.waypoints[waypoint_num].z[i], &path.waypoints[waypoint_num].r[i], 
+                &path.waypoints[waypoint_num].p[i], &path.waypoints[waypoint_num].yaw[i]);
         }
+                    
+        printf("I got %i on %i\n", rcount, waypoint_num);
+
+        // If not end of file, but an invalid read (waypoints have 31 values)
+        // if (rcount != EOF && rcount != 31)
+        // {
+        //     fprintf(stderr, "ERROR: invalid waypoint read from line: %i\n",
+        //         waypoint_num + 1);  // lines 1 indexed, waypoints zero indexed
+        //     printf("I got %i\n", rcount);
+        //     return -1;
+        // }
 
         // Increment line number for next iteration
         ++waypoint_num;

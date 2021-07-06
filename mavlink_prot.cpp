@@ -196,11 +196,11 @@ static void* __transmit_thread_func(void* arg) {
                 msg_len = mavlink_msg_to_send_buffer(buf, &(msg_series[identity]));
             // }
 
-            printf("////////////SENDING %u FROM %i///////////////\n", msg_len, identity);
-            for(int i = 0; i < msg_len; i++) {
-                printf("buffer component: %x\n", buf[i]);
-            }
-            printf("////////////END TRANSMISSION//////////\n");
+            // printf("////////////SENDING %u FROM %i///////////////\n", msg_len, identity);
+            // for(int i = 0; i < msg_len; i++) {
+            //     printf("buffer component: %x\n", buf[i]);
+            // }
+            // printf("////////////END TRANSMISSION//////////\n");
 
 
             if(msg_len < 0){
@@ -313,6 +313,7 @@ int mav_init(uint8_t sysid, int dest_id, const char* dest_ip, uint16_t port, uin
 int send_new_series(struct msg_t new_message[NUM_DRONES])
 {
     mavlink_message_t prep;
+    printf("Packaging %f | %f | %f | %f | %f | %f\n", new_message[0].x, new_message[0].y, new_message[0].z, new_message[0].rpy[0], new_message[0].rpy[1], new_message[0].rpy[2]);
     for (int i = 0; i < NUM_DRONES; i++) {
         mavlink_msg_simple_system_control_pack(system_id, MAV_COMP_ID_ALL, &(prep), (new_message[i].x), (new_message[i]).y, (new_message[i]).z, 0.0, 0.0, 0.0, (new_message[i]).rpy, 0.0, 0.0, 0.0, 0.0);
         msg_series[i] = prep;

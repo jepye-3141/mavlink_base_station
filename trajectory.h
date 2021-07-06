@@ -3,13 +3,17 @@
 #include <stdlib.h>
 #include <unistd.h>  // for access()
 #include <stddef.h>
+#include "mavlink_prot.h"
 
+#define MAX_DRONES 5
 typedef struct waypoint_t
 {
-    double x, y, z;           ///< position
-    double xd, yd, zd;        ///< velocity
-    double roll, pitch, yaw;  ///< angles
-    double p, q, r;           ///< angular rates
+    double x[MAX_DRONES];
+    double y[MAX_DRONES];
+    double z[MAX_DRONES];
+    double r[MAX_DRONES];
+    double p[MAX_DRONES];
+    double yaw[MAX_DRONES];
     double t;                 ///< time
     int flag;  ///< flag to specify state transitions, etc. (included to "future proof")
 
@@ -32,6 +36,10 @@ typedef struct path_t
     }
 
 extern path_t path;
+
+int path_load_from_file(const char* file_path);
+
+void path_cleanup();
 
 #define TIME_TRANSITION_FLAG 0
 #define POS_TRANSITION_FLAG 1
