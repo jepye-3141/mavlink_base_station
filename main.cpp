@@ -23,19 +23,18 @@ int main()
     printf("hello!\n");
     uint8_t id = (uint8_t)7;
     
-    if (mav_init(id, 1, "192.168.2.200", RC_MAV_DEFAULT_UDP_PORT, RC_MAV_DEFAULT_CONNECTION_TIMEOUT_US) == -1) {
+    if (mav_init(id, 1, "192.168.8.1", RC_MAV_DEFAULT_UDP_PORT, RC_MAV_DEFAULT_CONNECTION_TIMEOUT_US) == -1) {
         printf("Failed to initialize mavlink1");
-        return -1;
-    }
-    printf("Initializing 2\n");
-    if (mav_init(id, 2, "192.168.2.203", 17000, RC_MAV_DEFAULT_CONNECTION_TIMEOUT_US) == -1) {
-        printf("Failed to initialize mavlink2");
         return -1;
     }
 
     msg_t command_packets[NUM_DRONES];
-    command_packets[0] = {52, 52, 52, {0, 0, 0}};
-    command_packets[1] = {42, 42, 42, {0, 0, 0}};
+    command_packets[0].x = 0.1;
+    command_packets[0].y = 0.1;
+    command_packets[0].z = -0.1;
+    command_packets[0].rpy[0] = 0.42;
+    command_packets[0].rpy[1] = 0.42;
+    command_packets[0].rpy[2] = 0.42;
 
     // printKeybindings();
 

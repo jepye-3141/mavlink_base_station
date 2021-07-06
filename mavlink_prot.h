@@ -3,7 +3,7 @@
 #include <rc/time.h>
 #include <netinet/in.h>
 #define NUM_DRONES 1
-#define MSG_RATE 50000
+#define MSG_RATE 200000
 
 struct address_node
 {
