@@ -6,6 +6,7 @@
 #include "mavlink_prot.h"
 
 #define MAX_DRONES 5
+#define NUM_TRAJ 1
 typedef struct waypoint_t
 {
     double x[MAX_DRONES];
@@ -38,11 +39,15 @@ typedef struct path_t
         .waypoints = NULL, .len = 0, .initialized = 0 \
     }
 
-extern path_t path;
+extern path_t path[NUM_TRAJ];
 
-int path_load_from_file(const char* file_path);
+int path_init();
 
-void path_cleanup();
+int path_load_from_file(const char* file_path, int pos);
+
+void path_cleanup_all();
+
+void path_cleanup(int pos);
 
 #define TIME_TRANSITION_FLAG 0
 #define POS_TRANSITION_FLAG 1

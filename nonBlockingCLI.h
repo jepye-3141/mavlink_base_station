@@ -1,4 +1,6 @@
 #define CLI_DES_POS_INCR 0.01
+#define SCOPE_MANUAL_ONLY 0
+#define SCOPE_PATTERNN_ONLY 1
 
 
 /**
@@ -94,64 +96,105 @@ int getch()
 }
 */
 
-int updateState(float &x_d, float &y_d, float &z_d, float &r_d, float &p_d, float &yaw_d) {
+int updateState(float &x_d, float &y_d, float &z_d, float &r_d, float &p_d, float &yaw_d, int &pattern, const int scope) {
     if (_kbhit()) {
-        switch (getchar()) {
-            case 'x': 
-                printf("\n\rExiting!\n\r");
-                //reset_terminal_mode();
-                return 1;
-                break;
+        switch (scope) {
+            case SCOPE_MANUAL_ONLY:
+                switch (getchar()) {
+                    case 'x': 
+                        printf("\n\rExiting!\n\r");
+                        //reset_terminal_mode();
+                        return 1;
+                        break;
 
-            // CLI for posiion setpoint (testing follower mode)
-            case 'q':
-                r_d += CLI_DES_POS_INCR;
-                break;
-            case 'e':
-                r_d -= CLI_DES_POS_INCR;
-                break;
-            case 'r':
-                p_d += CLI_DES_POS_INCR;
-                break;
-            case 'f':
-                p_d -= CLI_DES_POS_INCR;
-                break;
-            case 'w':
-                x_d += CLI_DES_POS_INCR;
-                break;
-            case 's':
-                x_d -= CLI_DES_POS_INCR;
-                break;
-            case 'd':
-                y_d += CLI_DES_POS_INCR;
-                break;
-            case 'a':
-                y_d -= CLI_DES_POS_INCR;
-                break;
-            case 't':
-                z_d -= CLI_DES_POS_INCR;
-                break;
-            case 'g':
-                z_d += CLI_DES_POS_INCR;
-                break;
-            case 'z':
-                yaw_d += CLI_DES_POS_INCR;
-                break;
-            case 'c':
-                yaw_d += CLI_DES_POS_INCR;
-                break;
-            case 'o':
-                x_d = 0.0;
-                y_d = 0.0;
-                z_d = 0.0;
-                r_d = 0.0;
-                p_d = 0.0;
-                yaw_d = 0.0;
-                break;
+                    // CLI for posiion setpoint (testing follower mode)
+                    case 'q':
+                        r_d += CLI_DES_POS_INCR;
+                        break;
+                    case 'e':
+                        r_d -= CLI_DES_POS_INCR;
+                        break;
+                    case 'r':
+                        p_d += CLI_DES_POS_INCR;
+                        break;
+                    case 'f':
+                        p_d -= CLI_DES_POS_INCR;
+                        break;
+                    case 'w':
+                        x_d += CLI_DES_POS_INCR;
+                        break;
+                    case 's':
+                        x_d -= CLI_DES_POS_INCR;
+                        break;
+                    case 'd':
+                        y_d += CLI_DES_POS_INCR;
+                        break;
+                    case 'a':
+                        y_d -= CLI_DES_POS_INCR;
+                        break;
+                    case 't':
+                        z_d -= CLI_DES_POS_INCR;
+                        break;
+                    case 'g':
+                        z_d += CLI_DES_POS_INCR;
+                        break;
+                    case 'z':
+                        yaw_d += CLI_DES_POS_INCR;
+                        break;
+                    case 'c':
+                        yaw_d += CLI_DES_POS_INCR;
+                        break;
+                    case 'o':
+                        x_d = 0.0;
+                        y_d = 0.0;
+                        z_d = 0.0;
+                        r_d = 0.0;
+                        p_d = 0.0;
+                        yaw_d = 0.0;
+                        break;
 
-            default :
+                    default :
+                        break;
+                        //printf("Input = %c \n\r",inputChar);
+                }
                 break;
-                //printf("Input = %c \n\r",inputChar);
+            case SCOPE_PATTERNN_ONLY:
+                switch (getchar()) {
+                    case '1':
+                        pattern = 1;
+                        break;
+                    case '2':
+                        pattern = 2;
+                        break;
+                    case '3':
+                        pattern = 3;
+                        break;
+                    case '4':
+                        pattern = 4;
+                        break;
+                    case '5':
+                        pattern = 5;
+                        break;
+                    case '6':
+                        pattern = 6;
+                        break;
+                    case '7':
+                        pattern = 7;
+                        break;
+                    case '8':
+                        pattern = 8;
+                        break;
+                    case '9':
+                        pattern = 9;
+                        break;
+                    case '0':
+                        pattern = 10;
+                        break;
+                    
+                    default:
+                        break;
+
+                }
         }
     }
 

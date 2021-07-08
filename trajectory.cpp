@@ -9,7 +9,7 @@
 
 #include "trajectory.h"
 
-path_t path = PATH_INITIALIZER;
+path_t path[NUM_TRAJ];
 
 /*********************************
  * Functions for internal use only
@@ -28,16 +28,24 @@ static int __count_file_lines(const char* file_path);
  *
  * @return  0 on success, -1 on failure
  */
-static int __read_waypoints(FILE* fd);
+static int __read_waypoints(FILE* fd, int pos);
 /**
  * ********************************
  */
 
-int path_load_from_file(const char* file_path)
-{
+int path_init() {
     // Clear any previously stored path, set init to 0
-    path_cleanup();
+    path_cleanup_all();
 
+    for (int i = 0; i < NUM_TRAJ; i++) {
+        path[i] = PATH_INITIALIZER;
+    }
+
+    return 0;
+}
+
+int path_load_from_file(const char* file_path, int pos)
+{
     // Check for valid file
     if (access(file_path, F_OK) != 0)
     {
@@ -45,40 +53,52 @@ int path_load_from_file(const char* file_path)
         return -1;
     }
 
+    if (pos >= NUM_TRAJ || pos < 0) {
+        fprintf(stderr, "ERROR: position specified beyond path array indices");
+        return -1;
+    }
+
     // Count number of waypoints contained in file
-    path.len = __count_file_lines(file_path);
+    path[pos].len = __count_file_lines(file_path);
 
     // Open file for waypoint reading
     FILE* fd = fopen(file_path, "r");
 
     // Read path size and allocate waypoint memory
-    path.waypoints = (waypoint_t*)malloc(sizeof(waypoint_t) * path.len);
-    if (path.waypoints == NULL)
+    path[pos].waypoints = (waypoint_t*)malloc(sizeof(waypoint_t) * path[pos].len);
+    if (path[pos].waypoints == NULL)
     {
         fprintf(stderr, "ERROR: failed allocating memory for path\n");
         return -1;
     }
 
     // Read waypoints from file
-    if (__read_waypoints(fd) < 0)
+    if (__read_waypoints(fd, pos) < 0)
     {
-        path_cleanup(); //Added to prevent potential memory leak
+        path_cleanup(pos); //Added to prevent potential memory leak
         fprintf(stderr, "ERROR: failed reading waypoint file\n");
         return -1;
     }
 
     fclose(fd);
 
-    path.initialized = 1;
+    path[pos].initialized = 1;
     return 0;
 }
 
-void path_cleanup()
+void path_cleanup_all() {
+    for (int i = 0; i < NUM_TRAJ; i++) {
+        path_cleanup(i);
+    }
+}
+
+void path_cleanup(int pos)
 {
-    free(path.waypoints);
-    path.waypoints = NULL;
-    path.len = 0;
-    path.initialized = 0;
+    free(path[pos].waypoints);
+    path[pos].waypoints = NULL;
+    path[pos].len = 0;
+    path[pos].initialized = 0;
+    
 }
 
 static int __count_file_lines(const char* file_path)
@@ -101,7 +121,7 @@ static int __count_file_lines(const char* file_path)
     return count;
 }
 
-static int __read_waypoints(FILE* fd)
+static int __read_waypoints(FILE* fd, int pos)
 {
     int rcount = 0;
     int waypoint_num = 0;
@@ -110,24 +130,24 @@ static int __read_waypoints(FILE* fd)
     {
         rcount = 0;
 
-        // Read formated file line (31 doubles)
+        // Read formated file line (30 doubles)
         for (int i = 0; i < MAX_DRONES; i++) {
             rcount += fscanf(fd, "%lf %lf %lf %lf %lf %lf",
-                &path.waypoints[waypoint_num].x[i], &path.waypoints[waypoint_num].y[i], 
-                &path.waypoints[waypoint_num].z[i], &path.waypoints[waypoint_num].x_dot[i], 
-                &path.waypoints[waypoint_num].y_dot[i], &path.waypoints[waypoint_num].z_dot[i]);
+                &path[pos].waypoints[waypoint_num].x[i], &path[pos].waypoints[waypoint_num].y[i], 
+                &path[pos].waypoints[waypoint_num].z[i], &path[pos].waypoints[waypoint_num].x_dot[i], 
+                &path[pos].waypoints[waypoint_num].y_dot[i], &path[pos].waypoints[waypoint_num].z_dot[i]);
         }
                     
         printf("I got %i on %i\n", rcount, waypoint_num);
 
         // If not end of file, but an invalid read (waypoints have 31 values)
-        // if (rcount != EOF && rcount != 31)
-        // {
-        //     fprintf(stderr, "ERROR: invalid waypoint read from line: %i\n",
-        //         waypoint_num + 1);  // lines 1 indexed, waypoints zero indexed
-        //     printf("I got %i\n", rcount);
-        //     return -1;
-        // }
+        if (rcount > -1 && rcount != 30)
+        {
+            fprintf(stderr, "ERROR: invalid waypoint read from line: %i\n",
+                waypoint_num + 1);  // lines 1 indexed, waypoints zero indexed
+            printf("I got %i\n", rcount);
+            return -1;
+        }
 
         // Increment line number for next iteration
         ++waypoint_num;
