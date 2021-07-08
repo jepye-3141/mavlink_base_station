@@ -15,6 +15,7 @@ int main()
     printf("hello!\n");
     uint8_t id = (uint8_t)7;
 
+    path_cleanup_all();
     path_init();
 
     if (path_load_from_file("guided_drone_waypoints.cfg", 0) == -1) {
@@ -29,21 +30,22 @@ int main()
     
 
     msg_t command_packets[NUM_DRONES];
-    int pattern = 0;
+    // Pattern defaults to first pattern
+    int pattern = 1;
     const int scope = SCOPE_PATTERNN_ONLY;
     
 
     // printKeybindings();
 
     while (true) {
-        updateState(command_packets[0].x, command_packets[0].y, 
-                    command_packets[0].z, command_packets[0].rpy[0], 
-                    command_packets[0].rpy[1], command_packets[0].rpy[2], 
-                    pattern, scope);
 
         // Copy the up-to-date state to other command packets 
         //     if they need to be copied to
         if (scope != SCOPE_PATTERNN_ONLY) {
+            updateState(command_packets[0].x, command_packets[0].y, 
+                    command_packets[0].z, command_packets[0].rpy[0], 
+                    command_packets[0].rpy[1], command_packets[0].rpy[2], 
+                    pattern, scope);
             for (int i = 0; i < NUM_DRONES; i++) {
                 command_packets[i].x = command_packets[0].x;
                 command_packets[i].y = command_packets[0].y;
@@ -58,19 +60,35 @@ int main()
         //otherwise, we are on pattern-only control, so we need to do path updates
         else {
             for (int i = 0; i < (int)path[0].len; i++) {
-                for (int k = 0; k < NUM_DRONES; k++) {
-                    command_packets[k].x = path[0].waypoints[i].x[k];
-                    command_packets[k].y = path[0].waypoints[i].y[k];
-                    command_packets[k].z = path[0].waypoints[i].z[k];
-                    command_packets[k].x_dot = path[0].waypoints[i].x_dot[k];
-                    command_packets[k].y_dot = path[0].waypoints[i].y_dot[k];
-                    command_packets[k].z_dot = path[0].waypoints[i].z_dot[k];
-                    command_packets[k].rpy[0] = 0;
-                    command_packets[k].rpy[1] = 0;
-                    command_packets[k].rpy[2] = 0;
-                } 
+                int prev_pattern = pattern;
+                updateState(command_packets[0].x, command_packets[0].y, 
+                    command_packets[0].z, command_packets[0].rpy[0], 
+                    command_packets[0].rpy[1], command_packets[0].rpy[2], 
+                    pattern, scope);
+
+                if (pattern == 0) {
+                    i--;
+                }
+                else {
+                    if (pattern > NUM_TRAJ) {
+                    printf("Invalid pattern, reverting to previous pattern");
+                    pattern = prev_pattern;
+                    }
+                    for (int k = 0; k < NUM_DRONES; k++) {
+                        command_packets[k].x = path[pattern - 1].waypoints[i].x[k];
+                        command_packets[k].y = path[pattern - 1].waypoints[i].y[k];
+                        command_packets[k].z = path[pattern - 1].waypoints[i].z[k];
+                        command_packets[k].x_dot = path[pattern - 1].waypoints[i].x_dot[k];
+                        command_packets[k].y_dot = path[pattern - 1].waypoints[i].y_dot[k];
+                        command_packets[k].z_dot = path[pattern - 1].waypoints[i].z_dot[k];
+                        command_packets[k].rpy[pattern - 1] = 0;
+                        command_packets[k].rpy[pattern - 1] = 0;
+                        command_packets[k].rpy[pattern - 1] = 0;
+                    } 
+                }
                 send_new_series(command_packets);
                 rc_usleep(MSG_RATE);
+                printf("\n%i\n", pattern);
             }
         }
 

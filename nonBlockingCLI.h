@@ -190,6 +190,13 @@ int updateState(float &x_d, float &y_d, float &z_d, float &r_d, float &p_d, floa
                     case '0':
                         pattern = 10;
                         break;
+                    case 'p':
+                        pattern = 0;
+                        break;
+                    // case 'z':
+                    //     pattern = -1;
+                    //     break;
+                    
                     
                     default:
                         break;
