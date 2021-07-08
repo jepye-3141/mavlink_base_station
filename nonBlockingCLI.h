@@ -193,6 +193,12 @@ int updateState(float &x_d, float &y_d, float &z_d, float &r_d, float &p_d, floa
                     case 'p':
                         pattern = 0;
                         break;
+                    case 't':
+                        pattern = -1;
+                        break;
+                    case 'l':
+                        pattern = -2;
+                        break;
                     // case 'z':
                     //     pattern = -1;
                     //     break;

@@ -4,6 +4,7 @@
 #include <netinet/in.h>
 #define NUM_DRONES 1
 #define MSG_RATE 100000
+#define MAVLINK_COMMAND_INITIALIZER {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, {0.0, 0.0, 0.0}}
 
 struct address_node
 {

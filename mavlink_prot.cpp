@@ -105,7 +105,7 @@ static void* __listen_thread_func(void* arg)
 		memset(buf, 0, BUFFER_LENGTH);
 		num_bytes_rcvd = recvfrom(sock_fd[identity], buf, BUFFER_LENGTH, 0, (struct sockaddr *) &(my_address[identity]), &addr_len);
 
-        printf("%i recreived\n", num_bytes_rcvd);
+        printf("%i recreived\n", (int)num_bytes_rcvd);
 
 		// check for timeout
 		if(num_bytes_rcvd <= 0){
@@ -155,7 +155,7 @@ static void* __listen_thread_func(void* arg)
                 
                 mavlink_msg_simple_system_control_decode(&temp_in, &temp_out);
                 data[identity] = temp_out;
-                printf("%g | %g | %g | %g | %g | %g | %g\n", 
+                printf("%f | %f | %f | %f | %f | %f \n", 
                         data[identity].x_pos, data[identity].y_pos, 
                         data[identity].x_pos, data[identity].rpy[0], 
                         data[identity].rpy[1], data[identity].rpy[2]);

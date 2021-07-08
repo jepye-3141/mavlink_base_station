@@ -3,10 +3,16 @@
 #include <stdlib.h>
 #include <unistd.h>  // for access()
 #include <stddef.h>
+#include "math_utils.h"
 #include "mavlink_prot.h"
 
-#define MAX_DRONES 5
-#define NUM_TRAJ 1
+#define NUM_UNIQUE_TRAJ 1
+#define NUM_DYNAMIC_TRAJ 2
+#define NUM_TRAJ NUM_UNIQUE_TRAJ+NUM_DYNAMIC_TRAJ
+#define TAKEOFF_POS NUM_TRAJ-2
+#define LANDING_POS NUM_TRAJ-1
+#define MAX_DRONES 5 // because wp files are generate w/ 5 drones 
+
 typedef struct waypoint_t
 {
     double x[MAX_DRONES];
@@ -31,6 +37,11 @@ typedef struct path_t
     int initialized;  ///< 1 if initialized, 0 if uninitialized
 } path_t;
 
+typedef struct quintic_spline_1d_t
+{
+    float c0, c1, c2, c3, c4, c5;
+} quintic_spline_1d_t;
+
 /**
  * @brief       Initial values for path_t
  */
@@ -39,7 +50,7 @@ typedef struct path_t
         .waypoints = NULL, .len = 0, .initialized = 0 \
     }
 
-extern path_t path[NUM_TRAJ];
+extern path_t path[NUM_TRAJ + NUM_DYNAMIC_TRAJ];
 
 int path_init();
 
@@ -48,6 +59,33 @@ int path_load_from_file(const char* file_path, int pos);
 void path_cleanup_all();
 
 void path_cleanup(int pos);
+
+void takeoff_gen();
+
+void landing_gen(float current_x, float current_y, float current_z);
+
+/**
+ * @brief       Plan a path based on realsense payload landing command
+ * 
+ * @return      0 on success, -1 on failure
+ */
+int path_plan_from_rsp_cmd();
+
+/**
+ * @brief       Compute quintic spline coefficients for simple 1d path.
+ * 
+ * Starting and ending velocity and acceleration are 0.
+ * 
+ * @return      quintic_spline_1d_t with proper coefficients
+ */
+quintic_spline_1d_t make_1d_quintic_spline(float dx, float dt);
+
+/**
+ * @brief       Compute position along spline based on time
+ * 
+ * @return      1d position along spline
+ */
+float compute_spline_position(quintic_spline_1d_t* the_spline, float t);
 
 #define TIME_TRANSITION_FLAG 0
 #define POS_TRANSITION_FLAG 1
