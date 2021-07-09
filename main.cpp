@@ -95,9 +95,13 @@ int main()
                         if (prev_pattern != pattern && pattern != PAUSE_PATTERN && prev_pattern != PAUSE_PATTERN) {
                             takeoff_gen(current_z);
                             step = 0;
-                            offset_x = current_x - path[TAKEOFF_POS].waypoints[0].x[0];
-                            offset_y = current_y - path[TAKEOFF_POS].waypoints[0].y[0];
-                            offset_z = current_z - path[TAKEOFF_POS].waypoints[0].z[0];
+                            offset_x = current_x;
+                            offset_y = current_y;
+                            offset_z = current_z;
+                            // got rid of dynamic offsets 
+                            // offset_x = current_x - path[TAKEOFF_POS].waypoints[0].x[0];
+                            // offset_y = current_y - path[TAKEOFF_POS].waypoints[0].y[0];
+                            // offset_z = current_z - path[TAKEOFF_POS].waypoints[0].z[0];
                             printf("change traj, reset step and record offset!\n");
                         }
                         for (int k = 0; k < NUM_DRONES; k++) {
@@ -116,9 +120,13 @@ int main()
                         if (prev_pattern != pattern && pattern != PAUSE_PATTERN && prev_pattern != PAUSE_PATTERN) {
                             landing_gen(current_x, current_y, current_z);
                             step = 0;
-                            offset_x = current_x - path[LANDING_POS].waypoints[0].x[0];
-                            offset_y = current_y - path[LANDING_POS].waypoints[0].y[0];
-                            offset_z = current_z - path[LANDING_POS].waypoints[0].z[0];
+                            offset_x = current_x;
+                            offset_y = current_y;
+                            offset_z = current_z;
+                            // got rid of dynamic offsets 
+                            // offset_x = current_x - path[LANDING_POS].waypoints[0].x[0];
+                            // offset_y = current_y - path[LANDING_POS].waypoints[0].y[0];
+                            // offset_z = current_z - path[LANDING_POS].waypoints[0].z[0];
                             printf("change traj, reset step and record offset!\n");
                         }
                     
@@ -140,16 +148,30 @@ int main()
                             pattern = prev_pattern;
                         }
                         if (prev_pattern != pattern && pattern != PAUSE_PATTERN && prev_pattern != PAUSE_PATTERN) {
-                            landing_gen(current_x, current_y, current_z);
+                            offset_x = current_x;
+                            offset_y = current_y;
+                            offset_z = current_z;
+
                             step = 0;
-                            offset_x = current_x - path[pattern - 1].waypoints[0].x[0];
-                            offset_y = current_y - path[pattern - 1].waypoints[0].y[0];
-                            offset_z = current_z - path[pattern - 1].waypoints[0].z[0];
+                            // got rid of dynamic offsets 
+                            // offset_x = current_x - path[pattern - 1].waypoints[0].x[0];
+                            // offset_y = current_y - path[pattern - 1].waypoints[0].y[0];
+                            // offset_z = current_z - path[pattern - 1].waypoints[0].z[0];
                             printf("change traj, reset step and record offset!\n");
                         }
+
+                        if (offset_x != path[pattern - 1].waypoints[0].x[0] || offset_y != path[pattern - 1].waypoints[0].y[0]) {
+                            printf("\nError: starting waypoint of trajectory does not align with end waypoint of previous trajectory.\n");
+                            step = 0;
+                            break;
+                        }
+
                         for (int k = 0; k < NUM_DRONES; k++) {
-                            command_packets[k].x = path[pattern - 1].waypoints[step].x[k] + offset_x;
-                            command_packets[k].y = path[pattern - 1].waypoints[step].y[k] + offset_y;
+                            // got rid of dynamic offsets 
+                            // command_packets[k].x = path[pattern - 1].waypoints[step].x[k] + offset_x;
+                            // command_packets[k].y = path[pattern - 1].waypoints[step].y[k] + offset_y;
+                            command_packets[k].x = path[pattern - 1].waypoints[step].x[k];
+                            command_packets[k].y = path[pattern - 1].waypoints[step].y[k];
                             command_packets[k].z = offset_z;
                             command_packets[k].x_dot = path[pattern - 1].waypoints[step].x_dot[k];
                             command_packets[k].y_dot = path[pattern - 1].waypoints[step].y_dot[k];
@@ -164,7 +186,7 @@ int main()
                 switch (pattern) {
                     case TAKEOFF_PATTERN:
                         if ((int)path[TAKEOFF_POS].len == step + 1) {
-                            takeoff_landing_flag = false;
+                            in_progress_flag = false;
                             for (int k = 0; k < NUM_DRONES; k++) {
                                 command_packets[k].x_dot = 0;
                                 command_packets[k].y_dot = 0;
@@ -175,7 +197,7 @@ int main()
                         }
                     case LANDING_PATTERN:
                         if ((int)path[LANDING_POS].len == step + 1) {
-                            takeoff_landing_flag = false;
+                            in_progress_flag = false;
                             for (int k = 0; k < NUM_DRONES; k++) {
                                 command_packets[k].x_dot = 0;
                                 command_packets[k].y_dot = 0;
@@ -186,7 +208,8 @@ int main()
                         }
                     default:
                         if ((int)path[pattern - 1].len == step + 1) {
-                             for (int k = 0; k < NUM_DRONES; k++) {
+                            in_progress_flag = false;
+                            for (int k = 0; k < NUM_DRONES; k++) {
                                 command_packets[k].x_dot = 0;
                                 command_packets[k].y_dot = 0;
                                 command_packets[k].z_dot = 0;
