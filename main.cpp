@@ -154,16 +154,31 @@ int main()
                 switch (pattern) {
                     case TAKEOFF_PATTERN:
                         if ((int)path[TAKEOFF_POS].len == step + 1) {
+                             for (int k = 0; k < NUM_DRONES; k++) {
+                                command_packets[k].x_dot = 0;
+                                command_packets[k].y_dot = 0;
+                                command_packets[k].z_dot = 0;
+                            }
                             step--;
                             printf("end of traj, reset and pause!\n");
                         }
                     case LANDING_PATTERN:
                         if ((int)path[LANDING_POS].len == step + 1) {
+                             for (int k = 0; k < NUM_DRONES; k++) {
+                                command_packets[k].x_dot = 0;
+                                command_packets[k].y_dot = 0;
+                                command_packets[k].z_dot = 0;
+                            }
                             step--;
                             printf("end of traj, reset and pause!\n");
                         }
                     default:
                         if ((int)path[pattern - 1].len == step + 1) {
+                             for (int k = 0; k < NUM_DRONES; k++) {
+                                command_packets[k].x_dot = 0;
+                                command_packets[k].y_dot = 0;
+                                command_packets[k].z_dot = 0;
+                            }
                             step--;
                             printf("end of traj, reset and pause!\n");
                         }
