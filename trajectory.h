@@ -13,6 +13,9 @@
 #define LANDING_POS NUM_TRAJ-1
 #define MAX_DRONES 5 // because wp files are generate w/ 5 drones 
 
+/**
+ * @brief       The type of waypoint which paths comprise of
+ */
 typedef struct waypoint_t
 {
     double x[MAX_DRONES];
@@ -60,8 +63,14 @@ void path_cleanup_all();
 
 void path_cleanup(int pos);
 
+/**
+ * @brief       Dynamically generate takeoff spline trajectory
+ */
 void takeoff_gen(float current_z);
 
+/**
+ * @brief       Dynamically generate landing spline trajectory
+ */
 void landing_gen(float current_x, float current_y, float current_z);
 
 /**

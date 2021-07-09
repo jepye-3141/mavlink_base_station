@@ -174,7 +174,7 @@ int updateState(float &x_d, float &y_d, float &z_d, float &r_d, float &p_d, floa
                     case '2':
                         if (!in_progress_flag) {
                             pattern = 2;
-                            // in_progress_flab marks whether we are allowed to switch to a new pattern or not
+                            // in_progress_flag marks whether we are allowed to switch to a new pattern or not
                             in_progress_flag = true;
                         }
                         else {
