@@ -138,6 +138,9 @@ static int __read_waypoints(FILE* fd, int pos)
                 &path[pos].waypoints[waypoint_num].x[i], &path[pos].waypoints[waypoint_num].y[i], 
                 &path[pos].waypoints[waypoint_num].z[i], &path[pos].waypoints[waypoint_num].x_dot[i], 
                 &path[pos].waypoints[waypoint_num].y_dot[i], &path[pos].waypoints[waypoint_num].z_dot[i]);
+            // if (i == 0 && (path[pos].waypoints[waypoint_num])) {
+
+            // }
         }
                     
         printf("I got %i on %i\n", rcount, waypoint_num);
@@ -157,8 +160,8 @@ static int __read_waypoints(FILE* fd, int pos)
     return 0;
 }
 
-void takeoff_gen() {
-    __dynamic_z_change(0, 0, 0, -1.5, TAKEOFF_POS);
+void takeoff_gen(float current_z) {
+    __dynamic_z_change(0, 0, current_z, -4.5, TAKEOFF_POS);
 }
 
 void landing_gen(float current_x, float current_y, float current_z) {
@@ -196,7 +199,9 @@ static void __dynamic_z_change(float current_x, float current_y, float current_z
     // Start at t=0
     double t_curr = 0;
     double s_curr = 0;
+    double v_curr = 0;
     double z_curr = 0;
+    double z_dot_curr = 0;
 
      // Setup Segment #1
     double dx = z2.d[0] - z1.d[0];
@@ -211,11 +216,13 @@ static void __dynamic_z_change(float current_x, float current_y, float current_z
         // 1) Get 1d position
         t_curr = ( ((double) i) / ((double) (num_pts-1))) * (t2 - t1);
         s_curr = compute_spline_position(&q_spline_1, t_curr);
+        v_curr = compute_spline_velocity(&q_spline_1, t_curr);
 
         // 2) Convert to 3d position
         if (d_len > 0) 
         {
             z_curr = (s_curr / d_len) * dz  + z1.d[2];
+            z_dot_curr = (dz / abs(dz)) * v_curr;
         }   
         else
         {
@@ -232,7 +239,7 @@ static void __dynamic_z_change(float current_x, float current_y, float current_z
             path[pos].waypoints[i].z[k] = z_curr;
             path[pos].waypoints[i].x_dot[k] = 0;
             path[pos].waypoints[i].y_dot[k] = 0;
-            path[pos].waypoints[i].z_dot[k] = 0;
+            path[pos].waypoints[i].z_dot[k] = z_dot_curr;
             path[pos].waypoints[i].flag = 0;
         }
     }
@@ -261,4 +268,12 @@ float compute_spline_position(quintic_spline_1d_t* the_spline, float t)
          + the_spline->c3 * pow(t,3)
          + the_spline->c4 * pow(t,4)
          + the_spline->c5 * pow(t,5);
+}
+
+float compute_spline_velocity(quintic_spline_1d_t* the_spline, float t)
+{
+    return 0
+         + 3*(the_spline->c3) * pow(t,2)
+         + 4*(the_spline->c4) * pow(t,3)
+         + 5*(the_spline->c5) * pow(t,4);
 }

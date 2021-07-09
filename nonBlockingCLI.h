@@ -13,6 +13,8 @@
 // #include <stropts.h>
 #include <sys/ioctl.h>
 
+bool takeoff_landing_flag = false;
+
 int _kbhit() {
     static const int STDIN = 0;
     static bool initialized = false;
@@ -161,42 +163,96 @@ int updateState(float &x_d, float &y_d, float &z_d, float &r_d, float &p_d, floa
             case SCOPE_PATTERNN_ONLY:
                 switch (getchar()) {
                     case '1':
-                        pattern = 1;
+                        if (!takeoff_landing_flag) {
+                            pattern = 1;
+                        }
+                        else {
+                            printf("\nCannot transition to unique trajectory during takeoff or landing.\n");
+                        }
                         break;
                     case '2':
-                        pattern = 2;
+                        if (!takeoff_landing_flag) {
+                            pattern = 2;
+                        }
+                        else {
+                            printf("\nCannot transition to unique trajectory during takeoff or landing.\n");
+                        }
                         break;
                     case '3':
-                        pattern = 3;
+                        if (!takeoff_landing_flag) {
+                            pattern = 3;
+                        }
+                        else {
+                            printf("\nCannot transition to unique trajectory during takeoff or landing.\n");
+                        }
                         break;
                     case '4':
-                        pattern = 4;
+                        if (!takeoff_landing_flag) {
+                            pattern = 4;
+                        }
+                        else {
+                            printf("\nCannot transition to unique trajectory during takeoff or landing.\n");
+                        }
                         break;
                     case '5':
-                        pattern = 5;
+                        if (!takeoff_landing_flag) {
+                            pattern = 5;
+                        }
+                        else {
+                            printf("\nCannot transition to unique trajectory during takeoff or landing.\n");
+                        }
                         break;
                     case '6':
-                        pattern = 6;
+                        if (!takeoff_landing_flag) {
+                            pattern = 6;
+                        }
+                        else {
+                            printf("\nCannot transition to unique trajectory during takeoff or landing.\n");
+                        }
                         break;
                     case '7':
-                        pattern = 7;
+                        if (!takeoff_landing_flag) {
+                            pattern = 7;
+                        }
+                        else {
+                            printf("\nCannot transition to unique trajectory during takeoff or landing.\n");
+                        }
                         break;
                     case '8':
-                        pattern = 8;
+                        if (!takeoff_landing_flag) {
+                            pattern = 8;
+                        }
+                        else {
+                            printf("\nCannot transition to unique trajectory during takeoff or landing.\n");
+                        }
                         break;
                     case '9':
-                        pattern = 9;
+                        if (!takeoff_landing_flag) {
+                            pattern = 9;
+                        }
+                        else {
+                            printf("\nCannot transition to unique trajectory during takeoff or landing.\n");
+                        }
                         break;
                     case '0':
-                        pattern = 10;
+                        if (!takeoff_landing_flag) {
+                            pattern = 10;
+                        }
+                        else {
+                            printf("\nCannot transition to unique trajectory during takeoff or landing.\n");
+                        }
                         break;
                     case 'p':
                         pattern = 0;
                         break;
                     case 't':
+                        printf("\nTransitioning to takeoff: safe mode activated.\n");
+                        takeoff_landing_flag = true;
                         pattern = -1;
                         break;
                     case 'l':
+                        printf("\nTransitioning to landing: safe mode activated.\n");
+                        takeoff_landing_flag = true;
                         pattern = -2;
                         break;
                     // case 'z':

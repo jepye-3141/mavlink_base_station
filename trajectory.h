@@ -60,7 +60,7 @@ void path_cleanup_all();
 
 void path_cleanup(int pos);
 
-void takeoff_gen();
+void takeoff_gen(float current_z);
 
 void landing_gen(float current_x, float current_y, float current_z);
 
@@ -86,6 +86,13 @@ quintic_spline_1d_t make_1d_quintic_spline(float dx, float dt);
  * @return      1d position along spline
  */
 float compute_spline_position(quintic_spline_1d_t* the_spline, float t);
+
+/**
+ * @brief       Compute velocity along spline based on time
+ * 
+ * @return      1d position along spline
+ */
+float compute_spline_velocity(quintic_spline_1d_t* the_spline, float t);
 
 #define TIME_TRANSITION_FLAG 0
 #define POS_TRANSITION_FLAG 1

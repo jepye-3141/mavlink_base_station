@@ -81,14 +81,6 @@ int main()
                 current_y = command_packets[0].y;
                 current_z = command_packets[0].z;
 
-                if (prev_pattern != pattern && pattern != 0 && prev_pattern != 0) {
-                    step = 0;
-                    offset_x = current_x;
-                    offset_y = current_y;
-                    offset_z = current_z;
-                    printf("change traj, reset step and record offset!\n");
-                }
-
                 switch (pattern) {
                     case PAUSE_ON_STARTUP_PATTERN:
                     case PAUSE_PATTERN:
@@ -101,14 +93,19 @@ int main()
                         break;
                     case TAKEOFF_PATTERN:
                         if (prev_pattern != pattern && pattern != PAUSE_PATTERN && prev_pattern != PAUSE_PATTERN) {
-                            takeoff_gen();
+                            takeoff_gen(current_z);
+                            step = 0;
+                            offset_x = current_x - path[TAKEOFF_POS].waypoints[0].x[0];
+                            offset_y = current_y - path[TAKEOFF_POS].waypoints[0].y[0];
+                            offset_z = current_z - path[TAKEOFF_POS].waypoints[0].z[0];
+                            printf("change traj, reset step and record offset!\n");
                         }
                         for (int k = 0; k < NUM_DRONES; k++) {
-                            command_packets[k].x = path[TAKEOFF_POS].waypoints[step].x[k];
-                            command_packets[k].y = path[TAKEOFF_POS].waypoints[step].y[k];
+                            command_packets[k].x = offset_x;
+                            command_packets[k].y = offset_y;
                             command_packets[k].z = path[TAKEOFF_POS].waypoints[step].z[k];
-                            command_packets[k].x_dot = path[TAKEOFF_POS].waypoints[step].x_dot[k];
-                            command_packets[k].y_dot = path[TAKEOFF_POS].waypoints[step].y_dot[k];
+                            command_packets[k].x_dot = 0;
+                            command_packets[k].y_dot = 0;
                             command_packets[k].z_dot = path[TAKEOFF_POS].waypoints[step].z_dot[k];
                             command_packets[k].rpy[TAKEOFF_POS] = 0;
                             command_packets[k].rpy[TAKEOFF_POS] = 0;
@@ -118,14 +115,19 @@ int main()
                     case LANDING_PATTERN:
                         if (prev_pattern != pattern && pattern != PAUSE_PATTERN && prev_pattern != PAUSE_PATTERN) {
                             landing_gen(current_x, current_y, current_z);
+                            step = 0;
+                            offset_x = current_x - path[LANDING_POS].waypoints[0].x[0];
+                            offset_y = current_y - path[LANDING_POS].waypoints[0].y[0];
+                            offset_z = current_z - path[LANDING_POS].waypoints[0].z[0];
+                            printf("change traj, reset step and record offset!\n");
                         }
                     
                         for (int k = 0; k < NUM_DRONES; k++) {
-                            command_packets[k].x = path[LANDING_POS].waypoints[step].x[k];
-                            command_packets[k].y = path[LANDING_POS].waypoints[step].y[k];
+                            command_packets[k].x = offset_x;
+                            command_packets[k].y = offset_y;
                             command_packets[k].z = path[LANDING_POS].waypoints[step].z[k];
-                            command_packets[k].x_dot = path[LANDING_POS].waypoints[step].x_dot[k];
-                            command_packets[k].y_dot = path[LANDING_POS].waypoints[step].y_dot[k];
+                            command_packets[k].x_dot = 0;
+                            command_packets[k].y_dot = 0;
                             command_packets[k].z_dot = path[LANDING_POS].waypoints[step].z_dot[k];
                             command_packets[k].rpy[LANDING_POS] = 0;
                             command_packets[k].rpy[LANDING_POS] = 0;
@@ -137,13 +139,21 @@ int main()
                             printf("Invalid pattern, reverting to previous pattern");
                             pattern = prev_pattern;
                         }
+                        if (prev_pattern != pattern && pattern != PAUSE_PATTERN && prev_pattern != PAUSE_PATTERN) {
+                            landing_gen(current_x, current_y, current_z);
+                            step = 0;
+                            offset_x = current_x - path[pattern - 1].waypoints[0].x[0];
+                            offset_y = current_y - path[pattern - 1].waypoints[0].y[0];
+                            offset_z = current_z - path[pattern - 1].waypoints[0].z[0];
+                            printf("change traj, reset step and record offset!\n");
+                        }
                         for (int k = 0; k < NUM_DRONES; k++) {
                             command_packets[k].x = path[pattern - 1].waypoints[step].x[k] + offset_x;
                             command_packets[k].y = path[pattern - 1].waypoints[step].y[k] + offset_y;
-                            command_packets[k].z = path[pattern - 1].waypoints[step].z[k] + offset_z;
+                            command_packets[k].z = offset_z;
                             command_packets[k].x_dot = path[pattern - 1].waypoints[step].x_dot[k];
                             command_packets[k].y_dot = path[pattern - 1].waypoints[step].y_dot[k];
-                            command_packets[k].z_dot = path[pattern - 1].waypoints[step].z_dot[k];
+                            command_packets[k].z_dot = 0;
                             command_packets[k].rpy[pattern - 1] = 0;
                             command_packets[k].rpy[pattern - 1] = 0;
                             command_packets[k].rpy[pattern - 1] = 0;
@@ -154,23 +164,25 @@ int main()
                 switch (pattern) {
                     case TAKEOFF_PATTERN:
                         if ((int)path[TAKEOFF_POS].len == step + 1) {
-                             for (int k = 0; k < NUM_DRONES; k++) {
+                            takeoff_landing_flag = false;
+                            for (int k = 0; k < NUM_DRONES; k++) {
                                 command_packets[k].x_dot = 0;
                                 command_packets[k].y_dot = 0;
                                 command_packets[k].z_dot = 0;
                             }
                             step--;
-                            printf("end of traj, reset and pause!\n");
+                            printf("safe mode off: end of traj, reset and pause!\n");
                         }
                     case LANDING_PATTERN:
                         if ((int)path[LANDING_POS].len == step + 1) {
-                             for (int k = 0; k < NUM_DRONES; k++) {
+                            takeoff_landing_flag = false;
+                            for (int k = 0; k < NUM_DRONES; k++) {
                                 command_packets[k].x_dot = 0;
                                 command_packets[k].y_dot = 0;
                                 command_packets[k].z_dot = 0;
                             }
                             step--;
-                            printf("end of traj, reset and pause!\n");
+                            printf("safe mode off: end of traj, reset and pause!\n");
                         }
                     default:
                         if ((int)path[pattern - 1].len == step + 1) {
