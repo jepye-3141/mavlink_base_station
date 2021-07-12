@@ -73,6 +73,10 @@ void takeoff_gen(float *current_x, float *current_y, float current_z);
  */
 void landing_gen(float *current_x, float *current_y, float current_z);
 
+void dynamic_takeoff(float *current_x, float *current_y, float current_z);
+
+void dynamic_landing(float *current_x, float *current_y, float current_z);
+
 /**
  * @brief       Plan a path based on realsense payload landing command
  * 
