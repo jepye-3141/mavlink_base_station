@@ -37,49 +37,60 @@ int main()
     msg_t command_packets[NUM_DRONES];
     // Pattern defaults to first pattern
     int pattern = -100;
-    float current_x = 0.0;
-    float current_y = 0.0;
-    float current_z = 0.0;
-    float offset_x = 0.0;
-    float offset_y = 0.0;
-    float offset_z = 0.0;
+    float current_x[NUM_DRONES];
+    float current_y[NUM_DRONES];
+    float current_z[NUM_DRONES];
+    float offset_x[NUM_DRONES];
+    float offset_y[NUM_DRONES];
+    float offset_z[NUM_DRONES];
+
+    for (int i = 0; i < NUM_DRONES; i++) {
+        current_x[i] = 0.0;
+        current_y[i] = 0.0;
+        current_z[i] = 0.0;
+        offset_x[i] = 0.0;
+        offset_y[i] = 0.0;
+        offset_z[i] = 0.0;
+    }
+
     const int scope = SCOPE_PATTERNN_ONLY;
     int step = 0;
-    command_packets[0] = MAVLINK_COMMAND_INITIALIZER;    
+    command_packets[0] = {2.0, 2.0, 0.0, 0.0, 0.0, 0.0, {0.0, 0.0, 0.0}};
 
     // printKeybindings();
 
     while (true) {
 
+        float dx = 0.0;
+        float dy = 0.0;
+        float dz = 0.0;
+        float dr = 0.0;
+        float dp = 0.0;
+        float dyaw = 0.0;
+        int prev_pattern = pattern;
+        updateState(dx, dy, dz, dr, dp, dyaw, pattern, scope);
+
         // Copy the up-to-date state to other command packets 
         //     if they need to be copied to
         if (scope != SCOPE_PATTERNN_ONLY) {
-            updateState(command_packets[0].x, command_packets[0].y, 
-                    command_packets[0].z, command_packets[0].rpy[0], 
-                    command_packets[0].rpy[1], command_packets[0].rpy[2], 
-                    pattern, scope);
             for (int i = 0; i < NUM_DRONES; i++) {
-                command_packets[i].x = command_packets[0].x;
-                command_packets[i].y = command_packets[0].y;
-                command_packets[i].z = command_packets[0].z;
-                command_packets[i].rpy[0] = command_packets[0].rpy[0];
-                command_packets[i].rpy[1] = command_packets[0].rpy[1];
-                command_packets[i].rpy[2] = command_packets[0].rpy[2];
-            }
+                    command_packets[i].x += dx;
+                    command_packets[i].y += dy;
+                    command_packets[i].z += dz;
+                    command_packets[i].rpy[0] += dr;
+                    command_packets[i].rpy[1] += dp;
+                    command_packets[i].rpy[2] += dyaw;
+                }
         }
         //otherwise, we are on pattern-only control, so we need to do path updates
         else {
                 printf("\nCurrent step: %i\n", step);
-                int prev_pattern = pattern;
-                
-                updateState(command_packets[0].x, command_packets[0].y, 
-                    command_packets[0].z, command_packets[0].rpy[0], 
-                    command_packets[0].rpy[1], command_packets[0].rpy[2], 
-                    pattern, scope);
 
-                current_x = command_packets[0].x;
-                current_y = command_packets[0].y;
-                current_z = command_packets[0].z;
+                for (int i = 0; i < NUM_DRONES; i++) {
+                    current_x[i] = command_packets[i].x;
+                    current_y[i] = command_packets[i].y;
+                    current_z[i] = command_packets[i].z;
+                }
 
                 switch (pattern) {
                     case PAUSE_ON_STARTUP_PATTERN:
@@ -92,12 +103,18 @@ int main()
                         step--;
                         break;
                     case TAKEOFF_PATTERN:
+                        printf("Previous pattern: %i New pattern: %i\n", prev_pattern, pattern);
                         if (prev_pattern != pattern && pattern != PAUSE_PATTERN && prev_pattern != PAUSE_PATTERN) {
-                            takeoff_gen(current_z);
+                            printf("got here\n");
+                            takeoff_gen(current_x, current_y, current_z[0]);
                             step = 0;
-                            offset_x = current_x;
-                            offset_y = current_y;
-                            offset_z = current_z;
+
+                            for (int i = 0; i < NUM_DRONES; i++) {
+                                offset_x[i] = current_x[i];
+                                offset_y[i] = current_y[i];
+                                offset_z[i] = current_z[i];
+                            }
+                            
                             // got rid of dynamic offsets 
                             // offset_x = current_x - path[TAKEOFF_POS].waypoints[0].x[0];
                             // offset_y = current_y - path[TAKEOFF_POS].waypoints[0].y[0];
@@ -105,8 +122,8 @@ int main()
                             printf("change traj, reset step and record offset!\n");
                         }
                         for (int k = 0; k < NUM_DRONES; k++) {
-                            command_packets[k].x = offset_x;
-                            command_packets[k].y = offset_y;
+                            command_packets[k].x = offset_x[k];
+                            command_packets[k].y = offset_y[k];
                             command_packets[k].z = path[TAKEOFF_POS].waypoints[step].z[k];
                             command_packets[k].x_dot = 0;
                             command_packets[k].y_dot = 0;
@@ -118,11 +135,15 @@ int main()
                         break;
                     case LANDING_PATTERN:
                         if (prev_pattern != pattern && pattern != PAUSE_PATTERN && prev_pattern != PAUSE_PATTERN) {
-                            landing_gen(current_x, current_y, current_z);
+                            landing_gen(current_x, current_y, current_z[0]);
                             step = 0;
-                            offset_x = current_x;
-                            offset_y = current_y;
-                            offset_z = current_z;
+
+                            for (int i = 0; i < NUM_DRONES; i++) {
+                                offset_x[i] = current_x[i];
+                                offset_y[i] = current_y[i];
+                                offset_z[i] = current_z[i];
+                            }
+
                             // got rid of dynamic offsets 
                             // offset_x = current_x - path[LANDING_POS].waypoints[0].x[0];
                             // offset_y = current_y - path[LANDING_POS].waypoints[0].y[0];
@@ -131,8 +152,8 @@ int main()
                         }
                     
                         for (int k = 0; k < NUM_DRONES; k++) {
-                            command_packets[k].x = offset_x;
-                            command_packets[k].y = offset_y;
+                            command_packets[k].x = offset_x[k];
+                            command_packets[k].y = offset_y[k];
                             command_packets[k].z = path[LANDING_POS].waypoints[step].z[k];
                             command_packets[k].x_dot = 0;
                             command_packets[k].y_dot = 0;
@@ -148,9 +169,11 @@ int main()
                             pattern = prev_pattern;
                         }
                         if (prev_pattern != pattern && pattern != PAUSE_PATTERN && prev_pattern != PAUSE_PATTERN) {
-                            offset_x = current_x;
-                            offset_y = current_y;
-                            offset_z = current_z;
+                            for (int i = 0; i < NUM_DRONES; i++) {
+                                offset_x[i] = current_x[i];
+                                offset_y[i] = current_y[i];
+                                offset_z[i] = current_z[i];
+                            }
 
                             step = 0;
                             // got rid of dynamic offsets 
@@ -160,10 +183,12 @@ int main()
                             printf("change traj, reset step and record offset!\n");
                         }
 
-                        if (offset_x != path[pattern - 1].waypoints[0].x[0] || offset_y != path[pattern - 1].waypoints[0].y[0]) {
-                            printf("\nError: starting waypoint of trajectory does not align with end waypoint of previous trajectory.\n");
-                            step = 0;
-                            break;
+                        for (int i = 0; i < NUM_DRONES; i++) {
+                            if (offset_x[i] != path[pattern - 1].waypoints[0].x[i] || offset_y[i] != path[pattern - 1].waypoints[0].y[i]) {
+                                printf("\nError: starting waypoint of trajectory does not align with end waypoint of previous trajectory.\n");
+                                step = 0;
+                                break;
+                            }
                         }
 
                         for (int k = 0; k < NUM_DRONES; k++) {
@@ -172,7 +197,7 @@ int main()
                             // command_packets[k].y = path[pattern - 1].waypoints[step].y[k] + offset_y;
                             command_packets[k].x = path[pattern - 1].waypoints[step].x[k];
                             command_packets[k].y = path[pattern - 1].waypoints[step].y[k];
-                            command_packets[k].z = offset_z;
+                            command_packets[k].z = offset_z[k];
                             command_packets[k].x_dot = path[pattern - 1].waypoints[step].x_dot[k];
                             command_packets[k].y_dot = path[pattern - 1].waypoints[step].y_dot[k];
                             command_packets[k].z_dot = 0;

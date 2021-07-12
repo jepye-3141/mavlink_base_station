@@ -66,12 +66,12 @@ void path_cleanup(int pos);
 /**
  * @brief       Dynamically generate takeoff spline trajectory
  */
-void takeoff_gen(float current_z);
+void takeoff_gen(float *current_x, float *current_y, float current_z);
 
 /**
  * @brief       Dynamically generate landing spline trajectory
  */
-void landing_gen(float current_x, float current_y, float current_z);
+void landing_gen(float *current_x, float *current_y, float current_z);
 
 /**
  * @brief       Plan a path based on realsense payload landing command
