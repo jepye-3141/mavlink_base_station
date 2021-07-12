@@ -31,6 +31,8 @@ static int __count_file_lines(const char* file_path);
 static int __read_waypoints(FILE* fd, int pos);
 
 static void __dynamic_z_change(float *current_x, float *current_y, float current_z, float target_z, int pos);
+
+static void __dynamic_pos_change(float *current_x, float *current_y, float current_z, float *target_x, float *target_y, float target_z, int pos);
 /**
  * ********************************
  */
@@ -168,6 +170,14 @@ void landing_gen(float *current_x, float *current_y, float current_z) {
     __dynamic_z_change(current_x, current_y, current_z, 0, LANDING_POS);
 }
 
+void takeoff_5_gen(float *current_x, float *current_y, float current_z) {
+    
+}
+
+void landing_5_gen(float *current_x, float *current_y, float current_z) {
+
+}
+
 static void __dynamic_z_change(float *current_x, float *current_y, float current_z, float target_z, int pos) {
     // current z position
     rc_vector_t z1[NUM_DRONES];
@@ -261,6 +271,10 @@ static void __dynamic_z_change(float *current_x, float *current_y, float current
 
     path[pos].initialized = 1;
     // return 0;
+}
+
+static void __dynamic_pos_change(float *current_x, float *current_y, float current_z, float *target_x, float *target_y, float target_z, int pos) {
+
 }
 
 quintic_spline_1d_t make_1d_quintic_spline(float dx, float dt)
