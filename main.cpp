@@ -106,7 +106,7 @@ int main()
                         printf("Previous pattern: %i New pattern: %i\n", prev_pattern, pattern);
                         if (prev_pattern != pattern && pattern != PAUSE_PATTERN && prev_pattern != PAUSE_PATTERN) {
                             printf("got here\n");
-                            takeoff_gen(current_x, current_y, current_z[0]);
+                            takeoff_gen(current_x, current_y);
                             step = 0;
 
                             for (int i = 0; i < NUM_DRONES; i++) {

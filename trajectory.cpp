@@ -32,7 +32,6 @@ static int __read_waypoints(FILE* fd, int pos);
 
 static void __dynamic_z_change(float *current_x, float *current_y, float current_z, float target_z, int pos);
 
-static void __dynamic_pos_change(float *current_x, float *current_y, float current_z, float *target_x, float *target_y, float target_z, int pos);
 /**
  * ********************************
  */
@@ -372,8 +371,8 @@ void takeoff_5_gen(float *current_x, float *current_y) {
 
             // 3) Write to the path
             path[TAKEOFF_POS].waypoints[i].t = t_curr + t2;
-            path[TAKEOFF_POS].waypoints[i].x[k] = current_x[k];
-            path[TAKEOFF_POS].waypoints[i].y[k] = current_y[k];
+            path[TAKEOFF_POS].waypoints[i].x[k] = x_curr;
+            path[TAKEOFF_POS].waypoints[i].y[k] = y_curr;
             path[TAKEOFF_POS].waypoints[i].z[k] = z_curr;
             path[TAKEOFF_POS].waypoints[i].x_dot[k] = x_dot_curr;
             path[TAKEOFF_POS].waypoints[i].y_dot[k] = y_dot_curr;
@@ -589,8 +588,8 @@ void landing_5_gen(float *current_x, float *current_y, float current_z) {
 
             // 3) Write to the path
             path[TAKEOFF_POS].waypoints[i].t = t_curr + t2;
-            path[TAKEOFF_POS].waypoints[i].x[k] = current_x[k];
-            path[TAKEOFF_POS].waypoints[i].y[k] = current_y[k];
+            path[TAKEOFF_POS].waypoints[i].x[k] = x_curr;
+            path[TAKEOFF_POS].waypoints[i].y[k] = y_curr;
             path[TAKEOFF_POS].waypoints[i].z[k] = z_curr;
             path[TAKEOFF_POS].waypoints[i].x_dot[k] = x_dot_curr;
             path[TAKEOFF_POS].waypoints[i].y_dot[k] = y_dot_curr;
@@ -697,10 +696,6 @@ static void __dynamic_z_change(float *current_x, float *current_y, float current
 
     path[pos].initialized = 1;
     // return 0;
-}
-
-static void __dynamic_pos_change(float *current_x, float *current_y, float current_z, float *target_x, float *target_y, float target_z, int pos) {
-
 }
 
 quintic_spline_1d_t make_1d_quintic_spline(float dx, float dt)
