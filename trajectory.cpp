@@ -194,6 +194,12 @@ void takeoff_5_gen(float *current_x, float *current_y) {
         x2[i].d[1] = (double)current_y[i];
         x2[i].d[2] = (double)target_z;
     }
+    if (NUM_DRONES == 5) {
+        x2[4].d[0] = 0.0;
+        x2[4].d[1] = 0.0;
+        x2[4].d[2] = (double)target_z + VERT_OFFSET;
+    }
+
     double t2 = 5.0;
 
     int num_pts_1 = 100;
@@ -264,6 +270,52 @@ void takeoff_5_gen(float *current_x, float *current_y) {
 
     }
 
+    // Perform xyz translation to reach true tensioning point
+    if (NUM_DRONES == 5) {
+        int k = 4;
+        double x_curr = 0.0;
+        double y_curr = 0.0;
+        double x_dot_curr = 0.0;
+        double y_dot_curr = 0.0;
+        for (int i=num_pts_1; i < num_pts_2; i++) 
+        {
+            // 1) Get 1d position
+            t_curr = ( ((double) i) / ((double) (num_pts_2-1))) * (t2 - t1);
+            s_curr = compute_spline_position(&q_spline_1[k], t_curr);
+            v_curr = compute_spline_velocity(&q_spline_1[k], t_curr);
+
+            // 2) Convert to 3d position
+            if (d_len > 0) 
+            {
+                x_curr = (s_curr / d_len[k]) * dx[k]  + x1[k].d[0];
+                y_curr = (s_curr / d_len[k]) * dy[k]  + x1[k].d[1];
+                z_curr = (s_curr / d_len[k]) * dz[k]  + x1[k].d[2];
+                x_dot_curr = (dx[k] / abs(dx[k])) * v_curr;
+                y_dot_curr = (dy[k] / abs(dy[k])) * v_curr;
+                z_dot_curr = (dz[k] / abs(dz[k])) * v_curr;
+            }   
+            else
+            {
+                // If d_len is 0, avoid NaNs
+                x_curr = x2[k].d[0];
+                y_curr = x2[k].d[1];
+                z_curr = x2[k].d[2];
+            }
+            
+
+            // 3) Write to the path
+            path[TAKEOFF_POS].waypoints[i].t = t_curr + t2;
+            path[TAKEOFF_POS].waypoints[i].x[k] = x_curr;
+            path[TAKEOFF_POS].waypoints[i].y[k] = y_curr;
+            path[TAKEOFF_POS].waypoints[i].z[k] = z_curr;
+            path[TAKEOFF_POS].waypoints[i].x_dot[k] = x_dot_curr;
+            path[TAKEOFF_POS].waypoints[i].y_dot[k] = y_dot_curr;
+            path[TAKEOFF_POS].waypoints[i].z_dot[k] = z_dot_curr;
+            path[TAKEOFF_POS].waypoints[i].flag = 0;
+        }
+
+    }
+
     // 3rd z position
     rc_vector_t x3[NUM_DRONES];
     double target_z_2 = -4.5;
@@ -272,14 +324,14 @@ void takeoff_5_gen(float *current_x, float *current_y) {
         rc_vector_alloc(&x3[i], 3);
         x3[i].d[0] = (double)current_x[i];
         x3[i].d[1] = (double)current_y[i];
-        x3[i].d[2] = (double)target_z;
+        x3[i].d[2] = (double)target_z_2;
     }
     if (NUM_DRONES == 5) {
         x3[4] = RC_VECTOR_INITIALIZER;
         rc_vector_alloc(&x3[4], 3);
         x3[4].d[0] = (double)0.0;
         x3[4].d[1] = (double)0.0;
-        x3[4].d[2] = (double)target_z_2;
+        x3[4].d[2] = (double)target_z_2 + VERT_OFFSET;
     }
     double t3 = 10.0;
 
@@ -310,7 +362,6 @@ void takeoff_5_gen(float *current_x, float *current_y) {
             v_curr = compute_spline_velocity(&q_spline_2[k], t_curr);
 
             // 2) Convert to 3d position
-            ////////TODO add x and y spline for drone 5
             if (d_len > 0) 
             {
                 z_curr = (s_curr / d_len[k]) * dz[k]  + x2[k].d[2];
@@ -336,6 +387,7 @@ void takeoff_5_gen(float *current_x, float *current_y) {
 
     }
 
+    // Is seperation necessary? Probably not, but can't hurt
     if (NUM_DRONES == 5) {
         int k = 4;
         double x_curr = 0.0;
@@ -396,6 +448,9 @@ void landing_5_gen(float *current_x, float *current_y, float current_z) {
         x1[i].d[1] = (double)current_y[i];
         x1[i].d[2] = current_z;
     }
+    if (NUM_DRONES == 5) {
+        x1[4].d[2] = current_z + VERT_OFFSET;
+    }
     
     double t1 = 0.0;
     /////////////////NEEDS REFINEMENT/////////////////
@@ -410,6 +465,9 @@ void landing_5_gen(float *current_x, float *current_y, float current_z) {
         x2[i].d[0] = (double)current_x[i];
         x2[i].d[1] = (double)current_y[i];
         x2[i].d[2] = (double)target_z;
+    }
+    if (NUM_DRONES == 5) {
+        x1[4].d[2] = target_z + VERT_OFFSET;
     }
     double t2 = 5.0;
 

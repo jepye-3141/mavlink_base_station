@@ -12,6 +12,7 @@
 #define TAKEOFF_POS NUM_TRAJ-2
 #define LANDING_POS NUM_TRAJ-1
 #define MAX_DRONES 5 // because wp files are generate w/ 5 drones 
+#define VERT_OFFSET -0.25
 
 /**
  * @brief       The type of waypoint which paths comprise of
