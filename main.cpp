@@ -55,7 +55,11 @@ int main()
 
     const int scope = SCOPE_PATTERNN_ONLY;
     int step = 0;
-    command_packets[0] = {2.0, 2.0, 0.0, 0.0, 0.0, 0.0, {0.0, 0.0, 0.0}};
+    command_packets[0] = {-2.0, 2.0, 0.0, 0.0, 0.0, 0.0, {0.0, 0.0, 0.0}};
+    command_packets[1] = {2.0, 2.0, 0.0, 0.0, 0.0, 0.0, {0.0, 0.0, 0.0}};
+    command_packets[2] = {2.0, -2.0, 0.0, 0.0, 0.0, 0.0, {0.0, 0.0, 0.0}};
+    command_packets[3] = {-2.0, -2.0, 0.0, 0.0, 0.0, 0.0, {0.0, 0.0, 0.0}};
+    command_packets[4] = {0.0, 2.0, 0.0, 0.0, 0.0, 0.0, {0.0, 0.0, 0.0}};
 
     // printKeybindings();
 
