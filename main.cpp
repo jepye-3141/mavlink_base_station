@@ -55,11 +55,11 @@ int main()
 
     const int scope = SCOPE_PATTERNN_ONLY;
     int step = 0;
-    command_packets[0] = {-2.0, 2.0, 0.0, 0.0, 0.0, 0.0, {0.0, 0.0, 0.0}};
-    command_packets[1] = {2.0, 2.0, 0.0, 0.0, 0.0, 0.0, {0.0, 0.0, 0.0}};
-    command_packets[2] = {2.0, -2.0, 0.0, 0.0, 0.0, 0.0, {0.0, 0.0, 0.0}};
-    command_packets[3] = {-2.0, -2.0, 0.0, 0.0, 0.0, 0.0, {0.0, 0.0, 0.0}};
-    command_packets[4] = {0.0, 2.0, 0.0, 0.0, 0.0, 0.0, {0.0, 0.0, 0.0}};
+    command_packets[0] = {1.0, 1.0, 0.0, 0.0, 0.0, 0.0, {0.0, 0.0, 0.0}};
+    command_packets[1] = {-1.0, 1.0, 0.0, 0.0, 0.0, 0.0, {0.0, 0.0, 0.0}};
+    command_packets[2] = {-1.0, -1.0, 0.0, 0.0, 0.0, 0.0, {0.0, 0.0, 0.0}};
+    command_packets[3] = {1.0, -1.0, 0.0, 0.0, 0.0, 0.0, {0.0, 0.0, 0.0}};
+    command_packets[4] = {0.0, 1.0, 0.0, 0.0, 0.0, 0.0, {0.0, 0.0, 0.0}};
 
     // printKeybindings();
 
@@ -164,11 +164,11 @@ int main()
                         }
                     
                         for (int k = 0; k < NUM_DRONES; k++) {
-                            command_packets[k].x = offset_x[k];
-                            command_packets[k].y = offset_y[k];
+                            command_packets[k].x = path[LANDING_POS].waypoints[step].x[k];
+                            command_packets[k].y = path[LANDING_POS].waypoints[step].y[k];
                             command_packets[k].z = path[LANDING_POS].waypoints[step].z[k];
-                            command_packets[k].x_dot = 0;
-                            command_packets[k].y_dot = 0;
+                            command_packets[k].x_dot = path[LANDING_POS].waypoints[step].x_dot[k];
+                            command_packets[k].y_dot = path[LANDING_POS].waypoints[step].y_dot[k];
                             command_packets[k].z_dot = path[LANDING_POS].waypoints[step].z_dot[k];
                             command_packets[k].rpy[LANDING_POS] = 0;
                             command_packets[k].rpy[LANDING_POS] = 0;
@@ -196,7 +196,7 @@ int main()
                         }
 
                         for (int i = 0; i < NUM_DRONES; i++) {
-                            if (offset_x[i] != path[pattern - 1].waypoints[0].x[i] || offset_y[i] != path[pattern - 1].waypoints[0].y[i]) {
+                            if (abs((offset_x[i]) - path[pattern - 1].waypoints[0].x[i]) > 0.05 || abs(offset_y[i] - path[pattern - 1].waypoints[0].y[i]) > 0.05) {
                                 printf("\nError: starting waypoint of trajectory does not align with end waypoint of previous trajectory.\n");
                                 step = 0;
                                 break;
