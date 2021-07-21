@@ -198,7 +198,7 @@ void takeoff_5_gen(float *current_x, float *current_y) {
     if (NUM_DRONES == 5) {
         x2[4].d[0] = (double)current_x[4];
         x2[4].d[1] = (double)current_y[4];
-        x2[4].d[2] = (double)target_z;
+        x2[4].d[2] = (double)target_z + 0.5;
     }
 
     double t2 = 5.0;
@@ -289,7 +289,7 @@ void takeoff_5_gen(float *current_x, float *current_y) {
     if (NUM_DRONES == 5) {
         x3[4].d[0] = (double)0.0;
         x3[4].d[1] = (double)0.0;
-        x3[4].d[2] = (double)target_z;
+        x3[4].d[2] = (double)target_z + 0.5;
     }
     double t3 = 10.0;
 
@@ -375,7 +375,7 @@ void takeoff_5_gen(float *current_x, float *current_y) {
 
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    // 3rd z position
+    // 3rd position
     rc_vector_t x4[NUM_DRONES];
     for (int i = 0; i < NUM_DRONES; i++) {
         x4[i] = RC_VECTOR_INITIALIZER;
@@ -387,7 +387,7 @@ void takeoff_5_gen(float *current_x, float *current_y) {
     if (NUM_DRONES == 5) {
         x4[4].d[0] = (double)0.0;
         x4[4].d[1] = (double)0.0;
-        x4[4].d[2] = (double)target_z + VERT_OFFSET;
+        x4[4].d[2] = (double)target_z;
     }
     double t4 = 15.0;
 
@@ -469,7 +469,7 @@ void takeoff_5_gen(float *current_x, float *current_y) {
     if (NUM_DRONES == 5) {
         x5[4].d[0] = (double)0.0;
         x5[4].d[1] = (double)0.0;
-        x5[4].d[2] = (double)target_z_2 + VERT_OFFSET;
+        x5[4].d[2] = (double)target_z_2;
     }
     double t5 = 20.0;
 
@@ -543,7 +543,7 @@ void landing_5_gen(float *current_x, float *current_y, float current_z) {
         x1[i].d[2] = OP_ALTITUDE;
     }
     if (NUM_DRONES == 5) {
-        x1[NUM_DRONES - 1].d[2] = OP_ALTITUDE + VERT_OFFSET;
+        x1[NUM_DRONES - 1].d[2] = OP_ALTITUDE;
     }
     
     double t1 = 0.0;
@@ -564,7 +564,7 @@ void landing_5_gen(float *current_x, float *current_y, float current_z) {
     if (NUM_DRONES == 5) {
         x2[4].d[0] = (double)current_x[4];
         x2[4].d[1] = (double)current_y[4];
-        x2[4].d[2] = (double)target_z;
+        x2[4].d[2] = (double)target_z + 0.5;
         printf("\n x2 at %f %f %f\n", x2[4].d[0], x2[4].d[1], x2[4].d[2]);
     }
 
@@ -654,7 +654,7 @@ void landing_5_gen(float *current_x, float *current_y, float current_z) {
     if (NUM_DRONES == 5) {
         x3[4].d[0] = (double)current_x[4];
         x3[4].d[1] = ((double)current_y[4]) + 2.0;
-        x3[4].d[2] = (double)target_z;
+        x3[4].d[2] = (double)target_z + 0.5;
     }
     printf("\n x3 at %f %f %f\n", x3[4].d[0], x3[4].d[1], x3[4].d[2]);
     double t3 = 10.0;
@@ -753,8 +753,8 @@ void landing_5_gen(float *current_x, float *current_y, float current_z) {
         x4[i].d[2] = 0.0;
     }
     if (NUM_DRONES == 5) {
-        x4[4].d[0] = 0.0;
-        x4[4].d[1] = 2.0;
+        x4[4].d[0] = (double)current_x[4];
+        x4[4].d[1] = (double)current_y[4] + 2.0;
         x4[4].d[2] = 0.0;
     }
     double t4 = 15.0;

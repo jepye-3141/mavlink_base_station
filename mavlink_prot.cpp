@@ -213,7 +213,7 @@ static void* __transmit_thread_func(void* arg) {
             }
             // printf("sent one\n");
         }
-        usleep(MSG_RATE);
+        usleep(MSG_RATE * 10);
     }
     return 0;
 }
