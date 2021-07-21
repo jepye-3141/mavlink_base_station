@@ -223,6 +223,8 @@ int mav_init(uint8_t sysid, int dest_id, const char* dest_ip, uint16_t port, uin
 {
     int i;
 
+    if (drones_init == 0) {}
+
     for(int k = 0; k < NUM_DRONES; k++) {
         thread_id[k] = k;
     }
@@ -260,12 +262,14 @@ int mav_init(uint8_t sysid, int dest_id, const char* dest_ip, uint16_t port, uin
     // open socket for UDP packets
     if((sock_fd[dest_id - 1]=socket(AF_INET, SOCK_DGRAM, 0)) < 0){
         perror("ERROR: in rc_mav_init: ");
+        printf("socket issue\n");
         return -1;
     }
 
     // fill out rest of sockaddr_in struct
     if(__address_init(&(my_address[dest_id - 1]), 0, port) != 0){
         fprintf(stderr, "ERROR: in rc_mav_init: couldn't set local address\n");
+        printf("address issue\n");
         return -1;
     }
 
@@ -274,12 +278,14 @@ int mav_init(uint8_t sysid, int dest_id, const char* dest_ip, uint16_t port, uin
     rcv_timeo.tv_usec = (connection_timeout_us/2)%1000000;
     if(setsockopt(sock_fd[dest_id - 1], SOL_SOCKET, SO_RCVTIMEO, (struct timeval *)&rcv_timeo, sizeof (struct timeval)) < 0){
         perror("ERROR: in rc_mav_init: ");
+        printf("sockop issue\n");
         return -1;
     }
 
     // bind address to listening port
     if(bind(sock_fd[dest_id - 1], (struct sockaddr *) &(my_address[dest_id - 1]), sizeof my_address[dest_id - 1]) < 0){
         perror("ERROR: in rc_mav_init: ");
+        printf("bind issue\n");
         return -1;
     }    
 
