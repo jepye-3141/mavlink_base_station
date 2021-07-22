@@ -255,6 +255,7 @@ int updateState(float &x_d, float &y_d, float &z_d, float &r_d, float &p_d, floa
                         break;
                     case 'p':
                         pattern = 0;
+                        in_progress_flag = false;
                         break;
                     case 't':
                         printf("\nTransitioning to takeoff: safe mode activated.\n");
