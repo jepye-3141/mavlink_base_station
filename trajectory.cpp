@@ -852,7 +852,7 @@ static void __dynamic_z_change(float *current_x, float *current_y, float current
     }
     double t2 = 5.0;
 
-    int num_pts = 100;
+    int num_pts = 250;
     
     path_cleanup(pos);
     path[pos].len = num_pts;
