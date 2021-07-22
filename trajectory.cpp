@@ -198,7 +198,7 @@ void takeoff_5_gen(float *current_x, float *current_y) {
     if (NUM_DRONES == 5) {
         x2[4].d[0] = (double)current_x[4];
         x2[4].d[1] = (double)current_y[4];
-        x2[4].d[2] = (double)target_z + 0.5;
+        x2[4].d[2] = (double)target_z;
     }
 
     double t2 = 5.0;
@@ -289,7 +289,7 @@ void takeoff_5_gen(float *current_x, float *current_y) {
     if (NUM_DRONES == 5) {
         x3[4].d[0] = (double)0.0;
         x3[4].d[1] = (double)0.0;
-        x3[4].d[2] = (double)target_z + 0.5;
+        x3[4].d[2] = (double)target_z;
     }
     double t3 = 10.0;
 
@@ -387,7 +387,7 @@ void takeoff_5_gen(float *current_x, float *current_y) {
     if (NUM_DRONES == 5) {
         x4[4].d[0] = (double)0.0;
         x4[4].d[1] = (double)0.0;
-        x4[4].d[2] = (double)target_z;
+        x4[4].d[2] = (double)target_z + VERT_OFFSET;
     }
     double t4 = 15.0;
 
@@ -469,7 +469,7 @@ void takeoff_5_gen(float *current_x, float *current_y) {
     if (NUM_DRONES == 5) {
         x5[4].d[0] = (double)0.0;
         x5[4].d[1] = (double)0.0;
-        x5[4].d[2] = (double)target_z_2;
+        x5[4].d[2] = (double)target_z_2 + VERT_OFFSET;
     }
     double t5 = 20.0;
 

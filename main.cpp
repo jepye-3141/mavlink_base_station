@@ -37,10 +37,10 @@ int main()
         return -1;
     }
 
-    if (mav_init(id, 2, "127.0.0.1", RC_MAV_DEFAULT_UDP_PORT + 1000, RC_MAV_DEFAULT_CONNECTION_TIMEOUT_US) == -1) {
-        printf("Failed to initialize mavlink1");
-        return -1;
-    }
+    // if (mav_init(id, 2, "127.0.0.1", RC_MAV_DEFAULT_UDP_PORT + 1000, RC_MAV_DEFAULT_CONNECTION_TIMEOUT_US) == -1) {
+    //     printf("Failed to initialize mavlink1");
+    //     return -1;
+    // }
 
     // if (mav_init(id, 1, "192.168.2.203", RC_MAV_DEFAULT_UDP_PORT, RC_MAV_DEFAULT_CONNECTION_TIMEOUT_US) == -1) {
     //     printf("Failed to initialize mavlink1");
@@ -74,7 +74,7 @@ int main()
 
     const int scope = SCOPE_PATTERNN_ONLY;
     int step = 0;
-    command_packets[0] = {1.0, 1.0, 0.0, 0.0, 0.0, 0.0, {0.0, 0.0, 0.0}};
+    command_packets[0] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, {0.0, 0.0, 0.0}};
     command_packets[1] = {-1.0, 1.0, 0.0, 0.0, 0.0, 0.0, {0.0, 0.0, 0.0}};
     command_packets[2] = {-1.0, -1.0, 0.0, 0.0, 0.0, 0.0, {0.0, 0.0, 0.0}};
     command_packets[3] = {1.0, -1.0, 0.0, 0.0, 0.0, 0.0, {0.0, 0.0, 0.0}};
