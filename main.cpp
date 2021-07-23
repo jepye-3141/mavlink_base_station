@@ -129,15 +129,15 @@ int main()
                         printf("Previous pattern: %i New pattern: %i\n", prev_pattern, pattern);
                         if (prev_pattern != pattern && pattern != PAUSE_PATTERN && prev_pattern != PAUSE_PATTERN) {
                             printf("got here\n");
-                            if (NUM_DRONES < 5) {
+                            // if (NUM_DRONES < 5) {
                                 takeoff_gen(current_x, current_y);
-                            }
-                            else if (NUM_DRONES == 5) {
-                                takeoff_5_gen(current_x, current_y);
-                            }
-                            else {
+                            // }
+                            // else if (NUM_DRONES == 5) {
+                            //     takeoff_5_gen(current_x, current_y);
+                            // }
+                            // else {
 
-                            }
+                            // }
                             step = 0;
                             
                             // got rid of dynamic offsets 
@@ -160,12 +160,12 @@ int main()
                         break;
                     case LANDING_PATTERN:
                         if (prev_pattern != pattern && pattern != PAUSE_PATTERN && prev_pattern != PAUSE_PATTERN) {
-                            if (NUM_DRONES < 5) {
+                            // if (NUM_DRONES < 5) {
                                 landing_gen(current_x, current_y, current_z[0]);
-                            }
-                            else if (NUM_DRONES == 5) {
-                                landing_5_gen(current_x, current_y, current_z[0]);
-                            }
+                            // }
+                            // else if (NUM_DRONES == 5) {
+                            //     landing_5_gen(current_x, current_y, current_z[0]);
+                            // }
                             
                             step = 0;
 
