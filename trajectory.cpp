@@ -754,7 +754,7 @@ void landing_5_gen(float *current_x, float *current_y, float current_z) {
     }
     if (NUM_DRONES == 5) {
         x4[4].d[0] = (double)current_x[4];
-        x4[4].d[1] = (double)current_y[4] + 2.0;
+        x4[4].d[1] = (double)current_y[4] + 1.0;
         x4[4].d[2] = 0.0;
     }
     double t4 = 15.0;
