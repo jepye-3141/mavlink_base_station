@@ -32,25 +32,30 @@ int main()
     // Don't worry. John from the past has you covered. The problem is the ports: you have to run rav_init with different port
     //    numbers, or else the addresses will be the same and the computer will become mightily confused. 
     // So, don't panic, change the ports.
-    if (mav_init(id, 1, "192.168.1.205", RC_MAV_DEFAULT_UDP_PORT, RC_MAV_DEFAULT_CONNECTION_TIMEOUT_US) == -1) {
+    if (mav_init(id, 1, "192.168.1.201", RC_MAV_DEFAULT_UDP_PORT, RC_MAV_DEFAULT_CONNECTION_TIMEOUT_US) == -1) {
+        printf("Failed to initialize mavlink1");
+        return -1;
+    }
+    
+    if (mav_init(id, 2, "192.168.1.202", RC_MAV_DEFAULT_UDP_PORT + 1000, RC_MAV_DEFAULT_CONNECTION_TIMEOUT_US) == -1) {
         printf("Failed to initialize mavlink1");
         return -1;
     }
 
-    // if (mav_init(id, 2, "127.0.0.1", RC_MAV_DEFAULT_UDP_PORT + 1000, RC_MAV_DEFAULT_CONNECTION_TIMEOUT_US) == -1) {
-    //     printf("Failed to initialize mavlink1");
-    //     return -1;
-    // }
+    if (mav_init(id, 3, "192.168.1.203", RC_MAV_DEFAULT_UDP_PORT + 2000, RC_MAV_DEFAULT_CONNECTION_TIMEOUT_US) == -1) {
+        printf("Failed to initialize mavlink1");
+        return -1;
+    }
 
-    // if (mav_init(id, 1, "192.168.2.203", RC_MAV_DEFAULT_UDP_PORT, RC_MAV_DEFAULT_CONNECTION_TIMEOUT_US) == -1) {
-    //     printf("Failed to initialize mavlink1");
-    //     return -1;
-    // }
+    if (mav_init(id, 4, "192.168.1.204", RC_MAV_DEFAULT_UDP_PORT + 3000, RC_MAV_DEFAULT_CONNECTION_TIMEOUT_US) == -1) {
+        printf("Failed to initialize mavlink1");
+        return -1;
+    }
 
-    // if (mav_init(id, 2, "192.168.2.205", RC_MAV_DEFAULT_UDP_PORT + 1000, RC_MAV_DEFAULT_CONNECTION_TIMEOUT_US) == -1) {
-    //     printf("Failed to initialize mavlink1");
-    //     return -1;
-    // }
+    if (mav_init(id, 5, "192.168.1.205", RC_MAV_DEFAULT_UDP_PORT + 4000, RC_MAV_DEFAULT_CONNECTION_TIMEOUT_US) == -1) {
+        printf("Failed to initialize mavlink1");
+        return -1;
+    }
     
 
     msg_t command_packets[NUM_DRONES];
@@ -74,11 +79,11 @@ int main()
 
     const int scope = SCOPE_PATTERNN_ONLY;
     int step = 0;
-    command_packets[0] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, {0.0, 0.0, 0.0}};
-    command_packets[1] = {-1.0, 1.0, 0.0, 0.0, 0.0, 0.0, {0.0, 0.0, 0.0}};
-    command_packets[2] = {-1.0, -1.0, 0.0, 0.0, 0.0, 0.0, {0.0, 0.0, 0.0}};
-    command_packets[3] = {1.0, -1.0, 0.0, 0.0, 0.0, 0.0, {0.0, 0.0, 0.0}};
-    command_packets[4] = {0.0, 1.0, 0.0, 0.0, 0.0, 0.0, {0.0, 0.0, 0.0}};
+    command_packets[0] = {1.075, 1.075, 0.0, 0.0, 0.0, 0.0, {0.0, 0.0, 0.0}};
+    command_packets[1] = {-1.075, 1.075, 0.0, 0.0, 0.0, 0.0, {0.0, 0.0, 0.0}};
+    command_packets[2] = {-1.075, -1.075, 0.0, 0.0, 0.0, 0.0, {0.0, 0.0, 0.0}};
+    command_packets[3] = {1.075, -1.075, 0.0, 0.0, 0.0, 0.0, {0.0, 0.0, 0.0}};
+    command_packets[4] = {1.075, 0.0, 0.0, 0.0, 0.0, 0.0, {0.0, 0.0, 0.0}};
 
     // printKeybindings();
 
@@ -129,15 +134,13 @@ int main()
                         printf("Previous pattern: %i New pattern: %i\n", prev_pattern, pattern);
                         if (prev_pattern != pattern && pattern != PAUSE_PATTERN && prev_pattern != PAUSE_PATTERN) {
                             printf("got here\n");
-                            // if (NUM_DRONES < 5) {
+                            if (NUM_DRONES < 5) {
                                 takeoff_gen(current_x, current_y);
-                            // }
-                            // else if (NUM_DRONES == 5) {
-                            //     takeoff_5_gen(current_x, current_y);
-                            // }
-                            // else {
-
-                            // }
+                            }
+                            else if (NUM_DRONES == 5) {
+                                takeoff_5_gen(current_x, current_y);
+                            }
+                            
                             step = 0;
                             
                             // got rid of dynamic offsets 
@@ -160,12 +163,12 @@ int main()
                         break;
                     case LANDING_PATTERN:
                         if (prev_pattern != pattern && pattern != PAUSE_PATTERN && prev_pattern != PAUSE_PATTERN) {
-                            // if (NUM_DRONES < 5) {
+                            if (NUM_DRONES < 5) {
                                 landing_gen(current_x, current_y, current_z[0]);
-                            // }
-                            // else if (NUM_DRONES == 5) {
-                            //     landing_5_gen(current_x, current_y, current_z[0]);
-                            // }
+                            }
+                            else if (NUM_DRONES == 5) {
+                                landing_5_gen(current_x, current_y, current_z[0]);
+                            }
                             
                             step = 0;
 

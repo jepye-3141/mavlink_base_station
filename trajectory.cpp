@@ -288,7 +288,7 @@ void takeoff_5_gen(float *current_x, float *current_y) {
     }
     if (NUM_DRONES == 5) {
         x3[4].d[0] = (double)0.0;
-        x3[4].d[1] = (double)0.0;
+        x3[4].d[1] = (double)current_y[4];
         x3[4].d[2] = (double)target_z;
     }
     double t3 = 10.0;
@@ -347,8 +347,8 @@ void takeoff_5_gen(float *current_x, float *current_y) {
     for (int i=num_pts_1; i < (num_pts_2+num_pts_1); i++) 
     {
         int k = 4;
-        double y_curr;
-        double y_dot_curr;
+        double x_curr;
+        double x_dot_curr;
         // 1) Get 1d position
         t_curr = ( ((double) (i - ((num_pts_1))) / ((double) (num_pts_2-1))) * (t3 - t2));
         s_curr = compute_spline_position(&q_spline_2[k], t_curr);
@@ -357,19 +357,19 @@ void takeoff_5_gen(float *current_x, float *current_y) {
         // 2) Convert to 3d position
         if (d_len > 0) 
         {
-            y_curr = (s_curr / d_len[k]) * dy[k]  + x2[k].d[1];
-            y_dot_curr = (dy[k] / abs(dy[k])) * v_curr;
+            x_curr = (s_curr / d_len[k]) * dx[k]  + x2[k].d[0];
+            x_dot_curr = (dx[k] / abs(dx[k])) * v_curr;
         }   
         else
         {
             // If d_len is 0, avoid NaNs
-            y_curr = x2[k].d[1];
+            x_curr = x2[k].d[0];
         }
         
 
         // 3) Write to the path
-        path[TAKEOFF_POS].waypoints[i].y[k] = y_curr;
-        path[TAKEOFF_POS].waypoints[i].y_dot[k] = y_dot_curr;
+        path[TAKEOFF_POS].waypoints[i].x[k] = x_curr;
+        path[TAKEOFF_POS].waypoints[i].x_dot[k] = x_dot_curr;
     }
     printf("extra spline\n");
 
@@ -386,7 +386,7 @@ void takeoff_5_gen(float *current_x, float *current_y) {
     }
     if (NUM_DRONES == 5) {
         x4[4].d[0] = (double)0.0;
-        x4[4].d[1] = (double)0.0;
+        x4[4].d[1] = (double)current_y[4];
         x4[4].d[2] = (double)target_z + VERT_OFFSET;
     }
     double t4 = 15.0;
@@ -468,10 +468,10 @@ void takeoff_5_gen(float *current_x, float *current_y) {
     }
     if (NUM_DRONES == 5) {
         x5[4].d[0] = (double)0.0;
-        x5[4].d[1] = (double)0.0;
+        x5[4].d[1] = (double)current_y[4];
         x5[4].d[2] = (double)target_z_2 + VERT_OFFSET;
     }
-    double t5 = 20.0;
+    double t5 = 25.0;
 
     // Start at t=0
     t_curr = 0;
@@ -564,7 +564,7 @@ void landing_5_gen(float *current_x, float *current_y, float current_z) {
     if (NUM_DRONES == 5) {
         x2[4].d[0] = (double)current_x[4];
         x2[4].d[1] = (double)current_y[4];
-        x2[4].d[2] = (double)target_z + 0.5;
+        x2[4].d[2] = (double)target_z;
         printf("\n x2 at %f %f %f\n", x2[4].d[0], x2[4].d[1], x2[4].d[2]);
     }
 
@@ -652,9 +652,9 @@ void landing_5_gen(float *current_x, float *current_y, float current_z) {
         x3[i].d[2] = (double)target_z;
     }
     if (NUM_DRONES == 5) {
-        x3[4].d[0] = (double)current_x[4];
-        x3[4].d[1] = ((double)current_y[4]) + 2.0;
-        x3[4].d[2] = (double)target_z + 0.5;
+        x3[4].d[0] = (double)current_x[4] + 1.075;
+        x3[4].d[1] = ((double)current_y[4]);
+        x3[4].d[2] = (double)target_z;
     }
     printf("\n x3 at %f %f %f\n", x3[4].d[0], x3[4].d[1], x3[4].d[2]);
     double t3 = 10.0;
@@ -715,8 +715,8 @@ void landing_5_gen(float *current_x, float *current_y, float current_z) {
     {
         
         int k = 4;
-        double y_curr;
-        double y_dot_curr;
+        double x_curr;
+        double x_dot_curr;
         // 1) Get 1d position
         t_curr = ( ((double) (i - ((num_pts_1))) / ((double) (num_pts_2-1))) * (t3 - t2));
         s_curr = compute_spline_position(&q_spline_2[k], t_curr);
@@ -725,8 +725,8 @@ void landing_5_gen(float *current_x, float *current_y, float current_z) {
         // 2) Convert to 3d position
         // if (d_len > 0) 
         // {
-            y_curr = (s_curr / d_len[k]) * dy[k]  + x2[k].d[1];
-            y_dot_curr = (dy[k] / abs(dy[k])) * v_curr;
+            x_curr = (s_curr / d_len[k]) * dx[k]  + x2[k].d[0];
+            x_dot_curr = (dx[k] / abs(dx[k])) * v_curr;
         // }   
         // else
         // {
@@ -736,8 +736,8 @@ void landing_5_gen(float *current_x, float *current_y, float current_z) {
         
 
         // 3) Write to the path
-        path[LANDING_POS].waypoints[i].y[k] = y_curr;
-        path[LANDING_POS].waypoints[i].y_dot[k] = y_dot_curr;
+        path[LANDING_POS].waypoints[i].x[k] = x_curr;
+        path[LANDING_POS].waypoints[i].x_dot[k] = x_dot_curr;
     }
     printf("extra spline\n");
 
@@ -753,11 +753,11 @@ void landing_5_gen(float *current_x, float *current_y, float current_z) {
         x4[i].d[2] = 0.0;
     }
     if (NUM_DRONES == 5) {
-        x4[4].d[0] = (double)current_x[4];
-        x4[4].d[1] = (double)current_y[4] + 1.0;
+        x4[4].d[0] = (double)current_x[4] + 1.075;
+        x4[4].d[1] = (double)current_y[4];
         x4[4].d[2] = 0.0;
     }
-    double t4 = 15.0;
+    double t4 = 20.0;
 
     // Start at t=0
     t_curr = 0;

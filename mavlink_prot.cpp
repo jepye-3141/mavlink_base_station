@@ -13,7 +13,7 @@
 #include <rc/mavlink_udp.h>
 
 #define BUFFER_LENGTH			512 // common networking buffer size
-#define MAX_UNIQUE_MSG_TYPES		256
+#define MAX_UNIQUE_MSG_TYPES		1024
 #define MAX_PENDING_CONNECTIONS		32
 #define LOCALHOST_IP			"127.0.0.1"
 #define CONNECTION_TIMEOUT_US_MIN	200000
@@ -211,7 +211,7 @@ static void* __transmit_thread_func(void* arg) {
             if(bytes_sent != msg_len){
                 perror("ERROR in rc_mav_send_msg failed to write to UDP socket");
             }
-            // printf("sent one\n");
+            // printf("sent from %i\n", identity);
         }
         usleep(MSG_RATE);
     }
