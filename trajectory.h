@@ -15,6 +15,7 @@
 #define VERT_OFFSET -0.0
 #define OP_ALTITUDE -3.22
 #define TENSION_ALTITUDE -1.52
+#define X_OFFSET 1.075
 
 /**
  * @brief       The type of waypoint which paths comprise of

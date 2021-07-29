@@ -32,6 +32,10 @@ static int __read_waypoints(FILE* fd, int pos);
 
 static void __dynamic_z_change(float *current_x, float *current_y, float current_z, float target_z, int pos);
 
+static void __dynamic_pos_change(path_t &dynamic_path, float *current_x, float *current_y, float *current_z, float *target_x, float *target_y, float *target_z, double dt);
+
+static void __waypoint_trajectory(float **x_waypoints, float **y_waypoints, float **z_waypoints, double *dt, int num_waypoints, int pos );
+
 /**
  * ********************************
  */
@@ -170,654 +174,18 @@ void landing_gen(float *current_x, float *current_y, float current_z) {
 }
 
 void takeoff_5_gen(float *current_x, float *current_y) {
-    // current position
-    rc_vector_t x1[NUM_DRONES];
-    for (int i = 0; i < NUM_DRONES; i++) {
-        x1[i] = RC_VECTOR_INITIALIZER;
-        rc_vector_alloc(&x1[i], 3);
-        x1[i].d[0] = (double)current_x[i];
-        x1[i].d[1] = (double)current_y[i];
-        x1[i].d[2] = 0.0;
-    }
-    
-    double t1 = 0.0;
-    /////////////////NEEDS REFINEMENT/////////////////
-    double target_z = TENSION_ALTITUDE;
-    /////////////////////////////////////////////////
-
-    // 2nd z position
-    printf("starting 2nd z pos\n");
-    rc_vector_t x2[NUM_DRONES];
-    for (int i = 0; i < NUM_DRONES; i++) {
-        x2[i] = RC_VECTOR_INITIALIZER;
-        rc_vector_alloc(&x2[i], 3);
-        x2[i].d[0] = (double)current_x[i];
-        x2[i].d[1] = (double)current_y[i];
-        x2[i].d[2] = (double)target_z;
-    }
-    if (NUM_DRONES == 5) {
-        x2[4].d[0] = (double)current_x[4];
-        x2[4].d[1] = (double)current_y[4];
-        x2[4].d[2] = (double)target_z;
-    }
-
-    double t2 = 10.0;
-
-    int num_pts_1 = 100;
-    int num_pts_2 = 100;
-    int num_pts_3 = 100;
-    
-    path_cleanup(TAKEOFF_POS);
-    path[TAKEOFF_POS].len = num_pts_1 + num_pts_2 + num_pts_3;
-    path[TAKEOFF_POS].waypoints = (waypoint_t*)malloc(sizeof(waypoint_t) * path[TAKEOFF_POS].len);
-    if (path[TAKEOFF_POS].waypoints == NULL)
-    {
-        fprintf(stderr, "ERROR: failed allocating memory for path\n");
-        // return -1;
-    }
-
-    // Start at t=0
-    double t_curr = 0;
-    double s_curr = 0;
-    double v_curr = 0;
-    double z_curr = 0;
-    double z_dot_curr = 0;
-
-    // Setup Segment #1
-    double dx[NUM_DRONES];
-    double dy[NUM_DRONES];
-    double dz[NUM_DRONES];
-    double d_len[NUM_DRONES];
-    quintic_spline_1d_t q_spline_1[NUM_DRONES];
-    printf("starting first spline\n");
-    for (int i = 0; i < NUM_DRONES; i++) {
-        dx[i] = x2[i].d[0] - x1[i].d[0];
-        dy[i] = x2[i].d[1] - x1[i].d[1];
-        dz[i] = x2[i].d[2] - x1[i].d[2];
-        d_len[i] = sqrt(dx[i]*dx[i] + dy[i]*dy[i] + dz[i]*dz[i]);
-        q_spline_1[i] = make_1d_quintic_spline(d_len[i], t2 - t1);
-    }
-
-    // Run through Segment #1
-    for (int k = 0; k < NUM_DRONES; k++) {
-        for (int i=0; i < num_pts_1; i++) 
-        {
-            // 1) Get 1d position
-            t_curr = ( ((double) i) / ((double) (num_pts_1-1))) * (t2 - t1);
-            s_curr = compute_spline_position(&q_spline_1[k], t_curr);
-            v_curr = compute_spline_velocity(&q_spline_1[k], t_curr);
-
-            // 2) Convert to 3d position
-            if (d_len[k] > 0) 
-            {
-                z_curr = (s_curr / d_len[k]) * dz[k]  + x1[k].d[2];
-                z_dot_curr = (dz[k] / abs(dz[k])) * v_curr;
-            }   
-            else
-            {
-                // If d_len is 0, avoid NaNs
-                z_curr = x1[k].d[2];
-            }
-            
-
-            // 3) Write to the path
-            path[TAKEOFF_POS].waypoints[i].t = t_curr + t1;
-            path[TAKEOFF_POS].waypoints[i].x[k] = current_x[k];
-            path[TAKEOFF_POS].waypoints[i].y[k] = current_y[k];
-            path[TAKEOFF_POS].waypoints[i].z[k] = z_curr;
-            path[TAKEOFF_POS].waypoints[i].x_dot[k] = 0;
-            path[TAKEOFF_POS].waypoints[i].y_dot[k] = 0;
-            path[TAKEOFF_POS].waypoints[i].z_dot[k] = z_dot_curr;
-            path[TAKEOFF_POS].waypoints[i].flag = 0;
-        }
-        printf("spline %i done\n", k);
-
-    }
-
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    // Perform y translation to reach true tensioning point
-    rc_vector_t x3[NUM_DRONES];
-    for (int i = 0; i < NUM_DRONES; i++) {
-        x3[i] = RC_VECTOR_INITIALIZER;
-        rc_vector_alloc(&x3[i], 3);
-        x3[i].d[0] = (double)current_x[i];
-        x3[i].d[1] = (double)current_y[i];
-        x3[i].d[2] = (double)target_z;
-    }
-    if (NUM_DRONES == 5) {
-        x3[4].d[0] = (double)0.0;
-        x3[4].d[1] = (double)current_y[4];
-        x3[4].d[2] = (double)target_z;
-    }
-    double t3 = 15.0;
-
-    // Start at t=0
-    t_curr = 0;
-    s_curr = 0;
-    v_curr = 0;
-    z_curr = target_z;
-    z_dot_curr = 0;
-
-    // Setup Segment #2
-    quintic_spline_1d_t q_spline_2[NUM_DRONES];
-    for (int i = 0; i < NUM_DRONES; i++) {
-        dx[i] = x3[i].d[0] - x2[i].d[0];
-        dy[i] = x3[i].d[1] - x2[i].d[1];
-        dz[i] = x3[i].d[2] - x2[i].d[2];
-        d_len[i] = sqrt(dx[i]*dx[i] + dy[i]*dy[i] + dz[i]*dz[i]);
-        q_spline_2[i] = make_1d_quintic_spline(d_len[i], t3 - t2);
-    }
-
-    // Run through Segment #2
-    for (int k = 0; k < NUM_DRONES; k++) {
-        for (int i=num_pts_1; i < (num_pts_2+num_pts_1); i++) 
-        {
-            // 1) Get 1d position
-            t_curr = ( ((double) (i - num_pts_1)) / ((double) (num_pts_2-1))) * (t3 - t2);
-            s_curr = compute_spline_position(&q_spline_2[k], t_curr);
-            v_curr = compute_spline_velocity(&q_spline_2[k], t_curr);
-
-            // 2) Convert to 3d position
-            if (d_len[k] > 0) 
-            {
-                z_curr = (s_curr / d_len[k]) * dz[k]  + x2[k].d[2];
-                z_dot_curr = (dz[k] / abs(dz[k])) * v_curr;
-            }   
-            else
-            {
-                // If d_len is 0, avoid NaNs
-                z_curr = x2[k].d[2];
-            }
-            
-
-            // 3) Write to the path
-            path[TAKEOFF_POS].waypoints[i].t = t_curr + t2;
-            path[TAKEOFF_POS].waypoints[i].x[k] = current_x[k];
-            path[TAKEOFF_POS].waypoints[i].y[k] = current_y[k];
-            path[TAKEOFF_POS].waypoints[i].z[k] = z_curr;
-            path[TAKEOFF_POS].waypoints[i].x_dot[k] = 0;
-            path[TAKEOFF_POS].waypoints[i].y_dot[k] = 0;
-            path[TAKEOFF_POS].waypoints[i].z_dot[k] = 0;
-            path[TAKEOFF_POS].waypoints[i].flag = 0;
-        }
-        printf("spline %i done\n", k);
-    }
-    for (int i=num_pts_1; i < (num_pts_2+num_pts_1); i++) 
-    {
-        int k = 4;
-        double x_curr;
-        double x_dot_curr;
-        // 1) Get 1d position
-        t_curr = ( ((double) (i - ((num_pts_1))) / ((double) (num_pts_2-1))) * (t3 - t2));
-        s_curr = compute_spline_position(&q_spline_2[k], t_curr);
-        v_curr = compute_spline_velocity(&q_spline_2[k], t_curr);
-
-        // 2) Convert to 3d position
-        if (d_len[k] > 0) 
-        {
-            x_curr = (s_curr / d_len[k]) * dx[k]  + x2[k].d[0];
-            x_dot_curr = (dx[k] / abs(dx[k])) * v_curr;
-        }   
-        else
-        {
-            // If d_len is 0, avoid NaNs
-            x_curr = x2[k].d[0];
-        }
-        
-
-        // 3) Write to the path
-        path[TAKEOFF_POS].waypoints[i].x[k] = x_curr;
-        path[TAKEOFF_POS].waypoints[i].x_dot[k] = x_dot_curr;
-    }
-    printf("extra spline\n");
-
-
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    // 3rd position
-    rc_vector_t x4[NUM_DRONES];
-    double target_z_2 = OP_ALTITUDE;
-    for (int i = 0; i < NUM_DRONES; i++) {
-        x4[i] = RC_VECTOR_INITIALIZER;
-        rc_vector_alloc(&x4[i], 3);
-        x4[i].d[0] = (double)current_x[i];
-        x4[i].d[1] = (double)current_y[i];
-        x4[i].d[2] = (double)target_z_2;
-    }
-    if (NUM_DRONES == 5) {
-        x4[4].d[0] = (double)0.0;
-        x4[4].d[1] = (double)current_y[4];
-        x4[4].d[2] = (double)target_z_2 + VERT_OFFSET;
-    }
-    double t4 = 25.0;
-
-    // Start at t=0
-    t_curr = 0;
-    s_curr = 0;
-    v_curr = 0;
-    z_curr = 0;
-    z_dot_curr = 0;
-
-    printf("starting last but one spline setup\n");
-    // Setup Segment #2
-    quintic_spline_1d_t q_spline_3[NUM_DRONES];
-    for (int i = 0; i < NUM_DRONES; i++) {
-        dx[i] = x4[i].d[0] - x3[i].d[0];
-        dy[i] = x4[i].d[1] - x3[i].d[1];
-        dz[i] = x4[i].d[2] - x3[i].d[2];
-        d_len[i] = sqrt(dx[i]*dx[i] + dy[i]*dy[i] + dz[i]*dz[i]);
-        q_spline_3[i] = make_1d_quintic_spline(d_len[i], t4 - t3);
-    }
-
-    printf("last spline set up\n");
-
-    // Run through Segment #2
-    for (int k = 0; k < NUM_DRONES; k++) {
-        for (int i=(num_pts_1 + num_pts_2); i < (num_pts_1 + num_pts_2 + num_pts_3); i++) 
-        {
-            // 1) Get 1d position
-            t_curr = ( ((double) (i - ((num_pts_1 + num_pts_2))) / ((double) (num_pts_3-1))) * (t4 - t3));
-            s_curr = compute_spline_position(&q_spline_3[k], t_curr);
-            v_curr = compute_spline_velocity(&q_spline_3[k], t_curr);
-
-            // 2) Convert to 3d position
-            if (d_len[k] > 0.0) 
-            {
-                z_curr = (s_curr / d_len[k]) * dz[k]  + x3[k].d[2];
-                z_dot_curr = (dz[k] / abs(dz[k])) * v_curr;
-            }   
-            else
-            {
-                // If d_len is 0, avoid NaNs
-                z_curr = x3[k].d[2];
-            }
-            
-
-            // 3) Write to the path
-            path[TAKEOFF_POS].waypoints[i].t = t_curr + t2;
-            
-            path[TAKEOFF_POS].waypoints[i].x[k] = x4[k].d[0];
-            path[TAKEOFF_POS].waypoints[i].y[k] = x4[k].d[1];
-            path[TAKEOFF_POS].waypoints[i].z[k] = z_curr;
-            path[TAKEOFF_POS].waypoints[i].z_dot[k] = z_dot_curr;
-            
-            path[TAKEOFF_POS].waypoints[i].x_dot[k] = 0;
-            path[TAKEOFF_POS].waypoints[i].y_dot[k] = 0;
-            path[TAKEOFF_POS].waypoints[i].flag = 0;
-        }
-
-    }
-
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    // 3rd z position
-    // rc_vector_t x5[NUM_DRONES];
-    // double target_z_2 = OP_ALTITUDE;
-    // for (int i = 0; i < NUM_DRONES; i++) {
-    //     x5[i] = RC_VECTOR_INITIALIZER;
-    //     rc_vector_alloc(&x5[i], 3);
-    //     x5[i].d[0] = (double)current_x[i];
-    //     x5[i].d[1] = (double)current_y[i];
-    //     x5[i].d[2] = (double)target_z_2;
-    // }
-    // if (NUM_DRONES == 5) {
-    //     x5[4].d[0] = (double)0.0;
-    //     x5[4].d[1] = (double)current_y[4];
-    //     x5[4].d[2] = (double)target_z_2 + VERT_OFFSET;
-    // }
-    // double t5 = 25.0;
-
-    // // Start at t=0
-    // t_curr = 0;
-    // s_curr = 0;
-    // v_curr = 0;
-    // z_curr = 0;
-    // z_dot_curr = 0;
-
-    // printf("starting last spline setup\n");
-    // // Setup Segment #2
-    // quintic_spline_1d_t q_spline_4[NUM_DRONES];
-    // for (int i = 0; i < NUM_DRONES; i++) {
-    //     dx[i] = x5[i].d[0] - x4[i].d[0];
-    //     dy[i] = x5[i].d[1] - x4[i].d[1];
-    //     dz[i] = x5[i].d[2] - x4[i].d[2];
-    //     d_len[i] = sqrt(dx[i]*dx[i] + dy[i]*dy[i] + dz[i]*dz[i]);
-    //     q_spline_4[i] = make_1d_quintic_spline(d_len[i], t5 - t4);
-    // }
-
-    // printf("last spline set up\n");
-
-    // // Run through Segment #2
-    // for (int k = 0; k < NUM_DRONES; k++) {
-    //     for (int i=(num_pts_1 + num_pts_2 + num_pts_3); i < (num_pts_1 + num_pts_2 + num_pts_3 + num_pts_4); i++) 
-    //     {
-    //         // 1) Get 1d position
-    //         t_curr = ( ((double) (i - ((num_pts_1 + num_pts_2 + num_pts_3))) / ((double) (num_pts_4-1))) * (t5 - t4));
-    //         s_curr = compute_spline_position(&q_spline_4[k], t_curr);
-    //         v_curr = compute_spline_velocity(&q_spline_4[k], t_curr);
-
-    //         // 2) Convert to 3d position
-    //         if (d_len[k] > 0) 
-    //         {
-    //             z_curr = (s_curr / d_len[k]) * dz[k]  + x4[k].d[2];
-    //             z_dot_curr = (dz[k] / abs(dz[k])) * v_curr;
-    //         }   
-    //         else
-    //         {
-    //             // If d_len is 0, avoid NaNs
-    //             z_curr = x4[k].d[2];
-    //         }
-            
-
-    //         // 3) Write to the path
-    //         path[TAKEOFF_POS].waypoints[i].t = t_curr + t2;
-    //         path[TAKEOFF_POS].waypoints[i].x[k] = x5[k].d[0];
-    //         path[TAKEOFF_POS].waypoints[i].y[k] = x5[k].d[1];
-    //         path[TAKEOFF_POS].waypoints[i].z[k] = z_curr;
-    //         path[TAKEOFF_POS].waypoints[i].x_dot[k] = 0;
-    //         path[TAKEOFF_POS].waypoints[i].y_dot[k] = 0;
-    //         path[TAKEOFF_POS].waypoints[i].z_dot[k] = z_dot_curr;
-    //         path[TAKEOFF_POS].waypoints[i].flag = 0;
-    //     }
-
-    // }
-
-    path[TAKEOFF_POS].initialized = 1;
-    // return 0;
+    float wp_x_2[] = {current_x[0], current_x[1], current_x[2], current_x[3], (current_x[4] - X_OFFSET)};
+    float wp_z_1[] = {0.0, 0.0, 0.0, 0.0, 0.0};
+    float wp_z_2[] = {OP_ALTITUDE, OP_ALTITUDE, OP_ALTITUDE, OP_ALTITUDE, OP_ALTITUDE};
+    float *wp_x[] = {current_x, wp_x_2};
+    float *wp_y[] = {current_y, current_y};
+    float *wp_z[] = {wp_z_1, wp_z_2};
+    double dt[] = {10.0, 10.0};
+    __waypoint_trajectory(wp_x, wp_y, wp_z, dt, 2, TAKEOFF_POS);
 }
 
 void landing_5_gen(float *current_x, float *current_y, float current_z) {
-    // current position
-    rc_vector_t x1[NUM_DRONES];
-    for (int i = 0; i < NUM_DRONES; i++) {
-        x1[i] = RC_VECTOR_INITIALIZER;
-        rc_vector_alloc(&x1[i], 3);
-        x1[i].d[0] = (double)current_x[i];
-        x1[i].d[1] = (double)current_y[i];
-        x1[i].d[2] = OP_ALTITUDE;
-    }
-    if (NUM_DRONES == 5) {
-        x1[NUM_DRONES - 1].d[2] = OP_ALTITUDE + VERT_OFFSET;
-    }
     
-    double t1 = 0.0;
-    /////////////////NEEDS REFINEMENT/////////////////
-    double target_z = TENSION_ALTITUDE;
-    /////////////////////////////////////////////////
-
-    // 2nd z position
-    printf("starting 2nd z pos\n");
-    rc_vector_t x2[NUM_DRONES];
-    for (int i = 0; i < NUM_DRONES; i++) {
-        x2[i] = RC_VECTOR_INITIALIZER;
-        rc_vector_alloc(&x2[i], 3);
-        x2[i].d[0] = (double)current_x[i];
-        x2[i].d[1] = (double)current_y[i];
-        x2[i].d[2] = (double)target_z;
-    }
-    if (NUM_DRONES == 5) {
-        x2[4].d[0] = (double)current_x[4];
-        x2[4].d[1] = (double)current_y[4];
-        x2[4].d[2] = (double)target_z;
-        printf("\n x2 at %f %f %f\n", x2[4].d[0], x2[4].d[1], x2[4].d[2]);
-    }
-
-    double t2 = 5.0;
-
-    int num_pts_1 = 100;
-    int num_pts_2 = 100;
-    int num_pts_3 = 100;
-    
-    path_cleanup(LANDING_POS);
-    path[LANDING_POS].len = num_pts_1 + num_pts_2 + num_pts_3;
-    path[LANDING_POS].waypoints = (waypoint_t*)malloc(sizeof(waypoint_t) * path[LANDING_POS].len);
-    if (path[LANDING_POS].waypoints == NULL)
-    {
-        fprintf(stderr, "ERROR: failed allocating memory for path\n");
-        // return -1;
-    }
-
-    // Start at t=0
-    double t_curr = 0;
-    double s_curr = 0;
-    double v_curr = 0;
-    double z_curr = 0;
-    double z_dot_curr = 0;
-
-    // Setup Segment #1
-    double dx[NUM_DRONES];
-    double dy[NUM_DRONES];
-    double dz[NUM_DRONES];
-    double d_len[NUM_DRONES];
-    quintic_spline_1d_t q_spline_1[NUM_DRONES];
-    printf("starting first spline\n");
-    for (int i = 0; i < NUM_DRONES; i++) {
-        dx[i] = x2[i].d[0] - x1[i].d[0];
-        dy[i] = x2[i].d[1] - x1[i].d[1];
-        dz[i] = x2[i].d[2] - x1[i].d[2];
-        d_len[i] = sqrt(dx[i]*dx[i] + dy[i]*dy[i] + dz[i]*dz[i]);
-        q_spline_1[i] = make_1d_quintic_spline(d_len[i], t2 - t1);
-    }
-
-    // Run through Segment #1
-    for (int k = 0; k < NUM_DRONES; k++) {
-        for (int i=0; i < num_pts_1; i++) 
-        {
-            // 1) Get 1d position
-            t_curr = ( ((double) i) / ((double) (num_pts_1-1))) * (t2 - t1);
-            s_curr = compute_spline_position(&q_spline_1[k], t_curr);
-            v_curr = compute_spline_velocity(&q_spline_1[k], t_curr);
-
-            // 2) Convert to 3d position
-            if (d_len[k] > 0) 
-            {
-                z_curr = (s_curr / d_len[k]) * dz[k]  + x1[k].d[2];
-                z_dot_curr = (dz[k] / abs(dz[k])) * v_curr;
-            }   
-            else
-            {
-                // If d_len is 0, avoid NaNs
-                z_curr = x1[k].d[2];
-            }
-            
-
-            // 3) Write to the path
-            path[LANDING_POS].waypoints[i].t = t_curr + t1;
-            path[LANDING_POS].waypoints[i].x[k] = current_x[k];
-            path[LANDING_POS].waypoints[i].y[k] = current_y[k];
-            path[LANDING_POS].waypoints[i].z[k] = z_curr;
-            path[LANDING_POS].waypoints[i].x_dot[k] = 0;
-            path[LANDING_POS].waypoints[i].y_dot[k] = 0;
-            path[LANDING_POS].waypoints[i].z_dot[k] = z_dot_curr;
-            path[LANDING_POS].waypoints[i].flag = 0;
-        }
-        printf("spline %i done\n", k);
-
-    }
-
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    rc_vector_t x3[NUM_DRONES];
-    for (int i = 0; i < NUM_DRONES; i++) {
-        x3[i] = RC_VECTOR_INITIALIZER;
-        rc_vector_alloc(&x3[i], 3);
-        x3[i].d[0] = (double)current_x[i];
-        x3[i].d[1] = (double)current_y[i];
-        x3[i].d[2] = (double)target_z;
-    }
-    if (NUM_DRONES == 5) {
-        x3[4].d[0] = (double)current_x[4] + 1.075;
-        x3[4].d[1] = ((double)current_y[4]);
-        x3[4].d[2] = (double)target_z;
-    }
-    printf("\n x3 at %f %f %f\n", x3[4].d[0], x3[4].d[1], x3[4].d[2]);
-    double t3 = 10.0;
-
-
-    // Start at t=0
-    t_curr = 0;
-    s_curr = 0;
-    v_curr = 0;
-    z_curr = 0;
-    z_dot_curr = 0;
-
-    // Setup Segment #2
-    quintic_spline_1d_t q_spline_2[NUM_DRONES];
-    for (int i = 0; i < NUM_DRONES; i++) {
-        dx[i] = x3[i].d[0] - x2[i].d[0];
-        dy[i] = x3[i].d[1] - x2[i].d[1];
-        dz[i] = x3[i].d[2] - x2[i].d[2];
-        d_len[i] = sqrt(dx[i]*dx[i] + dy[i]*dy[i] + dz[i]*dz[i]);
-        q_spline_2[i] = make_1d_quintic_spline(d_len[i], t3 - t2);
-    }
-
-    // Run through Segment #2
-    for (int k = 0; k < NUM_DRONES; k++) {
-        for (int i=num_pts_1; i < (num_pts_2+num_pts_1); i++) 
-        {
-            // 1) Get 1d position
-            t_curr = ( ((double) (i - num_pts_1)) / ((double) (num_pts_2-1))) * (t3 - t2);
-            s_curr = compute_spline_position(&q_spline_2[k], t_curr);
-            v_curr = compute_spline_velocity(&q_spline_2[k], t_curr);
-
-            // 2) Convert to 3d position
-            if (d_len[k] > 0) 
-            {
-                z_curr = (s_curr / d_len[k]) * dz[k]  + x2[k].d[2];
-                z_dot_curr = (dz[k] / abs(dz[k])) * v_curr;
-            }   
-            else
-            {
-                // If d_len is 0, avoid NaNs
-                z_curr = x2[k].d[2];
-            }
-            
-
-            // 3) Write to the path
-            path[LANDING_POS].waypoints[i].t = t_curr + t2;
-            path[LANDING_POS].waypoints[i].x[k] = current_x[k];
-            path[LANDING_POS].waypoints[i].y[k] = current_y[k];
-            path[LANDING_POS].waypoints[i].z[k] = z_curr;
-            path[LANDING_POS].waypoints[i].x_dot[k] = 0;
-            path[LANDING_POS].waypoints[i].y_dot[k] = 0;
-            path[LANDING_POS].waypoints[i].z_dot[k] = 0;
-            path[LANDING_POS].waypoints[i].flag = 0;
-        }
-        printf("spline %i done\n", k);
-    }
-    for (int i=num_pts_1; i < (num_pts_2+num_pts_1); i++) 
-    {
-        
-        int k = 4;
-        double x_curr;
-        double x_dot_curr;
-        // 1) Get 1d position
-        t_curr = ( ((double) (i - ((num_pts_1))) / ((double) (num_pts_2-1))) * (t3 - t2));
-        s_curr = compute_spline_position(&q_spline_2[k], t_curr);
-        v_curr = compute_spline_velocity(&q_spline_2[k], t_curr);
-
-        // 2) Convert to 3d position
-        // if (d_len > 0) 
-        // {
-            x_curr = (s_curr / d_len[k]) * dx[k]  + x2[k].d[0];
-            x_dot_curr = (dx[k] / abs(dx[k])) * v_curr;
-        // }   
-        // else
-        // {
-        //     // If d_len is 0, avoid NaNs
-        //     y_curr = x2[k].d[1];
-        // }
-        
-
-        // 3) Write to the path
-        path[LANDING_POS].waypoints[i].x[k] = x_curr;
-        path[LANDING_POS].waypoints[i].x_dot[k] = x_dot_curr;
-    }
-    printf("extra spline\n");
-
-
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    // 3rd z position
-    rc_vector_t x4[NUM_DRONES];
-    for (int i = 0; i < NUM_DRONES; i++) {
-        x4[i] = RC_VECTOR_INITIALIZER;
-        rc_vector_alloc(&x4[i], 3);
-        x4[i].d[0] = (double)current_x[i];
-        x4[i].d[1] = (double)current_y[i];
-        x4[i].d[2] = 0.0;
-    }
-    if (NUM_DRONES == 5) {
-        x4[4].d[0] = (double)current_x[4] + 1.075;
-        x4[4].d[1] = (double)current_y[4];
-        x4[4].d[2] = 0.0;
-    }
-    double t4 = 20.0;
-
-    // Start at t=0
-    t_curr = 0;
-    s_curr = 0;
-    v_curr = 0;
-    z_curr = 0;
-    z_dot_curr = 0;
-
-    printf("starting last but one spline setup\n");
-    // Setup Segment #2
-    quintic_spline_1d_t q_spline_3[NUM_DRONES];
-    for (int i = 0; i < NUM_DRONES; i++) {
-        dx[i] = x4[i].d[0] - x3[i].d[0];
-        dy[i] = x4[i].d[1] - x3[i].d[1];
-        dz[i] = x4[i].d[2] - x3[i].d[2];
-        d_len[i] = sqrt(dx[i]*dx[i] + dy[i]*dy[i] + dz[i]*dz[i]);
-        q_spline_3[i] = make_1d_quintic_spline(d_len[i], t4 - t3);
-    }
-
-    printf("last spline set up\n");
-
-    // Run through Segment #2
-    for (int k = 0; k < NUM_DRONES; k++) {
-        for (int i=(num_pts_1 + num_pts_2); i < (num_pts_1 + num_pts_2 + num_pts_3); i++) 
-        {
-            // 1) Get 1d position
-            t_curr = ( ((double) (i - ((num_pts_1 + num_pts_2))) / ((double) (num_pts_3-1))) * (t4 - t3));
-            s_curr = compute_spline_position(&q_spline_3[k], t_curr);
-            v_curr = compute_spline_velocity(&q_spline_3[k], t_curr);
-
-            // 2) Convert to 3d position
-            if (d_len[k] > 0) 
-            {
-                z_curr = (s_curr / d_len[k]) * dz[k]  + x3[k].d[2];
-                z_dot_curr = (dz[k] / abs(dz[k])) * v_curr;
-            }   
-            else
-            {
-                // If d_len is 0, avoid NaNs
-                z_curr = x3[k].d[2];
-            }
-            
-
-            // 3) Write to the path
-            path[LANDING_POS].waypoints[i].t = t_curr + t2;
-            if (k != 4) {
-                path[LANDING_POS].waypoints[i].x[k] = x3[k].d[0];
-                path[LANDING_POS].waypoints[i].y[k] = x3[k].d[1];
-                path[LANDING_POS].waypoints[i].z[k] = z_curr;
-                path[LANDING_POS].waypoints[i].z_dot[k] = z_dot_curr;
-            }
-            else {
-                path[LANDING_POS].waypoints[i].x[k] = x3[k].d[0];
-                path[LANDING_POS].waypoints[i].y[k] = x3[k].d[1];
-                path[LANDING_POS].waypoints[i].z[k] = z_curr;
-                path[LANDING_POS].waypoints[i].z_dot[k] = z_dot_curr;
-            }
-            
-            path[LANDING_POS].waypoints[i].x_dot[k] = 0;
-            path[LANDING_POS].waypoints[i].y_dot[k] = 0;
-            path[LANDING_POS].waypoints[i].flag = 0;
-        }
-
-    }
-
-    path[LANDING_POS].initialized = 1;
-    // return 0;
 
 }
 
@@ -914,6 +282,156 @@ static void __dynamic_z_change(float *current_x, float *current_y, float current
 
     path[pos].initialized = 1;
     // return 0;
+}
+
+static void __waypoint_trajectory(float **x_waypoints, float **y_waypoints, float **z_waypoints, double *dt, int num_waypoints, int pos ) {
+    path_t path_fragments[num_waypoints - 1];
+    for (int i = 0; i < (num_waypoints - 1); i++) {
+        // free(path_fragments[i].waypoints);
+        path_fragments[i].waypoints = NULL;
+        path_fragments[i].len = 0;
+        path_fragments[i].initialized = 0;
+        path_fragments[i] = PATH_INITIALIZER;
+        __dynamic_pos_change(path_fragments[i], x_waypoints[i], y_waypoints[i], z_waypoints[i], x_waypoints[i + 1], y_waypoints[i + 1], z_waypoints[i + 1], dt[i]);
+    }
+    
+    int size = 0;
+    for (int i = 0; i < (num_waypoints - 1); i++) {
+        size += path_fragments[i].len;
+    }
+    
+    path_cleanup(pos);
+    path[pos].len = size;
+    path[pos].waypoints = (waypoint_t*)malloc(sizeof(waypoint_t) * path[pos].len);
+    if (path[pos].waypoints == NULL)
+    {
+        fprintf(stderr, "ERROR: failed allocating memory for path\n");
+        // return -1;
+    }
+
+    int acc = 0;
+    for (int i = 0; i < (num_waypoints - 1); i++) {
+        for (int k = 0; k < (int)path_fragments[i].len; k++) {
+            if (acc == 0) {
+                path[pos].waypoints[k + acc].t = path_fragments[i].waypoints[k].t;
+            }
+            else {
+                path[pos].waypoints[k + acc].t = path[pos].waypoints[acc - 1].t + path_fragments[i].waypoints[k].t;
+            }
+            for (int p = 0; p < NUM_DRONES; p++) {
+                path[pos].waypoints[i].x[p] = path_fragments[i].waypoints[k].x[p];
+                path[pos].waypoints[i].y[p] = path_fragments[i].waypoints[k].y[p];
+                path[pos].waypoints[i].z[p] = path_fragments[i].waypoints[k].z[p];
+                path[pos].waypoints[i].x_dot[p] = path_fragments[i].waypoints[k].x_dot[p];
+                path[pos].waypoints[i].y_dot[p] = path_fragments[i].waypoints[k].y_dot[p];
+                path[pos].waypoints[i].z_dot[p] = path_fragments[i].waypoints[k].z_dot[p];
+            }
+            path[pos].waypoints[i].flag = 0;
+        }
+        acc += path_fragments[i].len;
+    }
+}
+
+static void __dynamic_pos_change(path_t &dynamic_path, float *current_x, float *current_y, float *current_z, float *target_x, float *target_y, float *target_z, double dt) {
+    
+    // 1.1 Initialize current drone positions vectors
+    rc_vector_t x1[NUM_DRONES];
+    for (int i = 0; i < NUM_DRONES; i++) {
+        x1[i] = RC_VECTOR_INITIALIZER;
+        rc_vector_alloc(&x1[i], 3);
+
+        x1[i].d[0] = current_x[i];
+        x1[i].d[1] = current_y[i];
+        x1[i].d[2] = current_z[i];
+    }
+
+    // 1.2 Intiialize target drone positions vectors
+    rc_vector_t x2[NUM_DRONES];
+    for (int i = 0; i < NUM_DRONES; i++) {
+        x2[i] = RC_VECTOR_INITIALIZER;
+        rc_vector_alloc(&x2[i], 3);
+
+        x2[i].d[0] = target_x[i];
+        x2[i].d[1] = target_y[i];
+        x2[i].d[2] = target_z[i];
+    }
+
+    // 2 Normalize number of points in spline to message send rate
+    int num_pts = dt * 20; 
+
+    dynamic_path.len = num_pts;
+    dynamic_path.waypoints = (waypoint_t*)malloc(sizeof(waypoint_t) * dynamic_path.len);
+    if (dynamic_path.waypoints == NULL)
+    {
+        fprintf(stderr, "ERROR: failed allocating memory for path\n");
+        // return -1;
+    }
+
+    // 3 Declare the variables we use in the spline process
+    double t_curr = 0;
+    double s_curr = 0;
+    double v_curr = 0;
+
+    double x_curr = 0;
+    double x_dot_curr = 0;
+    double y_curr = 0;
+    double y_dot_curr = 0;
+    double z_curr = 0;
+    double z_dot_curr = 0;
+
+    double dx[NUM_DRONES];
+    double dy[NUM_DRONES];
+    double dz[NUM_DRONES];
+    double d_len[NUM_DRONES];
+
+    // 4 Create the spline based on the deltas
+    quintic_spline_1d_t q_spline_1[NUM_DRONES];
+    for (int i = 0; i < NUM_DRONES; i++) {
+        dx[i] = x2[i].d[0] - x1[i].d[0];
+        dy[i] = x2[i].d[1] - x1[i].d[1];
+        dz[i] = x2[i].d[2] - x1[i].d[2];
+        d_len[i] = sqrt(dx[i]*dx[i] + dy[i]*dy[i] + dz[i]*dz[i]);
+        q_spline_1[i] = make_1d_quintic_spline(d_len[i], dt);
+    }
+
+    // 5 Project the spline position and velocity onto x, y, and z to obtain waypoints
+    for (int k = 0; k < NUM_DRONES; k++) {
+        for (int i = 0; i < num_pts; i++) {
+            t_curr = ( ((double) i) / ((double) (num_pts-1))) * (dt);
+            s_curr = compute_spline_position(&q_spline_1[k], t_curr);
+            v_curr = compute_spline_velocity(&q_spline_1[k], t_curr);
+
+             if (d_len[k] > 0) 
+            {
+                x_curr = (s_curr / d_len[k]) * dx[k] + x1[k].d[0];
+                y_curr = (s_curr / d_len[k]) * dy[k] + x1[k].d[1];
+                z_curr = (s_curr / d_len[k]) * dz[k] + x1[k].d[2];
+                x_dot_curr = (dx[k] / abs(dx[k])) * v_curr;
+                y_dot_curr = (dy[k] / abs(dy[k])) * v_curr;
+                z_dot_curr = (dz[k] / abs(dz[k])) * v_curr;
+            }   
+            else
+            {
+                x_curr = x1[k].d[0];
+                y_curr = x1[k].d[1];
+                z_curr = x1[k].d[2];
+                x_dot_curr = 0;
+                y_dot_curr = 0;
+                z_dot_curr = 0;
+            }
+
+            // 6 Write the waypoints
+            dynamic_path.waypoints[i].t = t_curr;
+            dynamic_path.waypoints[i].x[k] = x_curr;
+            dynamic_path.waypoints[i].y[k] = y_curr;
+            dynamic_path.waypoints[i].z[k] = z_curr;
+            dynamic_path.waypoints[i].x_dot[k] = x_dot_curr;
+            dynamic_path.waypoints[i].y_dot[k] = y_dot_curr;
+            dynamic_path.waypoints[i].z_dot[k] = z_dot_curr;
+            dynamic_path.waypoints[i].flag = 0;
+        }
+    }
+
 }
 
 quintic_spline_1d_t make_1d_quintic_spline(float dx, float dt)
