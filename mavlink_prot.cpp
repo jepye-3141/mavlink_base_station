@@ -321,8 +321,35 @@ int send_new_series(struct msg_t new_message[NUM_DRONES])
     mavlink_message_t prep;
     
     for (int i = 0; i < NUM_DRONES; i++) {
-        printf("Packaging %f | %f | %f | %f | %f | %f\n", new_message[i].x, new_message[i].y, new_message[i].z, new_message[i].x_dot, new_message[i].y_dot, new_message[i].z_dot);
-        mavlink_msg_simple_system_control_pack(system_id, MAV_COMP_ID_ALL, &(prep), (new_message[i].x), (new_message[i]).y, (new_message[i]).z, new_message[0].x_dot, new_message[0].y_dot, new_message[0].z_dot, (new_message[i]).rpy, 0.0, 0.0, 0.0, 0.0);
+        float desired_roll;
+        float desired_pitch;
+        switch (i) {
+            case 0:
+                desired_roll = 0.04;
+                desired_pitch = -0.04;
+                break;
+            case 1:
+                desired_roll = 0.04;
+                desired_pitch = 0.04;
+                break;
+            case 2:
+                desired_roll = -0.04;
+                desired_pitch = 0.04;
+                break;
+            case 3:
+                desired_roll = -0.04;
+                desired_pitch = -0.04;
+                break;
+            default:
+                desired_roll = 0;
+                desired_pitch = 0;
+                break;
+        }
+            
+
+        float rpy[] = {desired_roll, desired_pitch, 0.0};
+        printf("Packaging %f | %f | %f | %f | %f | %f | %f | %f | %f\n", new_message[i].x, new_message[i].y, new_message[i].z, new_message[i].x_dot, new_message[i].y_dot, new_message[i].z_dot, rpy[0], rpy[1], rpy[2]);
+        mavlink_msg_simple_system_control_pack(system_id, MAV_COMP_ID_ALL, &(prep), (new_message[i].x), (new_message[i]).y, (new_message[i]).z, new_message[0].x_dot, new_message[0].y_dot, new_message[0].z_dot, rpy, 0.0, 0.0, 0.0, 0.0);
         msg_series[i] = prep;
     }
     
