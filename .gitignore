@@ -6,6 +6,11 @@
 # Node artifact files
 node_modules/
 dist/
+bin/
+
+# Compiled Executables
+*.exe
+*.o
 
 # Compiled Java class files
 *.class
