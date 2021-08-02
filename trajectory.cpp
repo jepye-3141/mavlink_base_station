@@ -185,15 +185,27 @@ void takeoff_5_gen(float *current_x, float *current_y) {
     float *wp_x[] = {current_x, wp_x_2, wp_x_3};
     float *wp_y[] = {current_y, current_y, current_y};
     float *wp_z[] = {wp_z_1, wp_z_2, wp_z_3};
-    
+
     double dt[] = {15.0, 15.0};
     // printf("x waypoint 2: %f, %f, %f, %f, %f\n", wp_x[1][0], wp_x[1][1], wp_x[1][2], wp_x[1][3], wp_x[1][4]);
     __waypoint_trajectory(wp_x, wp_y, wp_z, dt, 3, TAKEOFF_POS);
 }
 
 void landing_5_gen(float *current_x, float *current_y, float current_z) {
-    
+    float wp_x_2[] = {current_x[0], current_x[1], current_x[2], current_x[3], ((float)(current_x[4]) + (X_OFFSET))};
+    float wp_x_3[] = {current_x[0], current_x[1], current_x[2], current_x[3], ((float)(current_x[4]) + (X_OFFSET))};
 
+    float wp_z_1[] = {OP_ALTITUDE, OP_ALTITUDE, OP_ALTITUDE, OP_ALTITUDE, OP_ALTITUDE};
+    float wp_z_2[] = {TENSION_ALTITUDE, TENSION_ALTITUDE, TENSION_ALTITUDE, TENSION_ALTITUDE, TENSION_ALTITUDE};
+    float wp_z_3[] = {0.0, 0.0, 0.0, 0.0, 0.0};
+
+    float *wp_x[] = {current_x, wp_x_2, wp_x_3};
+    float *wp_y[] = {current_y, current_y, current_y};
+    float *wp_z[] = {wp_z_1, wp_z_2, wp_z_3};
+    
+    double dt[] = {15.0, 15.0};
+    // printf("x waypoint 2: %f, %f, %f, %f, %f\n", wp_x[1][0], wp_x[1][1], wp_x[1][2], wp_x[1][3], wp_x[1][4]);
+    __waypoint_trajectory(wp_x, wp_y, wp_z, dt, 3, LANDING_POS);
 }
 
 static void __dynamic_z_change(float *current_x, float *current_y, float current_z, float target_z, int pos) {
