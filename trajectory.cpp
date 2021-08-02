@@ -174,16 +174,21 @@ void landing_gen(float *current_x, float *current_y, float current_z) {
 }
 
 void takeoff_5_gen(float *current_x, float *current_y) {
-    printf("x waypoint 1: %f, %f, %f, %f, %f\n", current_x[0], current_x[1], current_x[2], current_x[3], current_x[4]);
+    // printf("x waypoint 1: %f, %f, %f, %f, %f\n", current_x[0], current_x[1], current_x[2], current_x[3], current_x[4]);
     float wp_x_2[] = {current_x[0], current_x[1], current_x[2], current_x[3], ((float)(current_x[4]) - (X_OFFSET))};
+    float wp_x_3[] = {current_x[0], current_x[1], current_x[2], current_x[3], ((float)(current_x[4]) - (X_OFFSET))};
+
     float wp_z_1[] = {0.0, 0.0, 0.0, 0.0, 0.0};
-    float wp_z_2[] = {OP_ALTITUDE, OP_ALTITUDE, OP_ALTITUDE, OP_ALTITUDE, OP_ALTITUDE};
-    float *wp_x[] = {current_x, wp_x_2};
-    float *wp_y[] = {current_y, current_y};
-    float *wp_z[] = {wp_z_1, wp_z_2};
-    double dt[] = {10.0, 10.0};
-    printf("x waypoint 2: %f, %f, %f, %f, %f\n", wp_x[1][0], wp_x[1][1], wp_x[1][2], wp_x[1][3], wp_x[1][4]);
-    __waypoint_trajectory(wp_x, wp_y, wp_z, dt, 2, TAKEOFF_POS);
+    float wp_z_2[] = {TENSION_ALTITUDE, TENSION_ALTITUDE, TENSION_ALTITUDE, TENSION_ALTITUDE, TENSION_ALTITUDE};
+    float wp_z_3[] = {OP_ALTITUDE, OP_ALTITUDE, OP_ALTITUDE, OP_ALTITUDE, OP_ALTITUDE};
+
+    float *wp_x[] = {current_x, wp_x_2, wp_x_3};
+    float *wp_y[] = {current_y, current_y, current_y};
+    float *wp_z[] = {wp_z_1, wp_z_2, wp_z_3};
+    
+    double dt[] = {15.0, 15.0};
+    // printf("x waypoint 2: %f, %f, %f, %f, %f\n", wp_x[1][0], wp_x[1][1], wp_x[1][2], wp_x[1][3], wp_x[1][4]);
+    __waypoint_trajectory(wp_x, wp_y, wp_z, dt, 3, TAKEOFF_POS);
 }
 
 void landing_5_gen(float *current_x, float *current_y, float current_z) {
@@ -413,12 +418,26 @@ static void __dynamic_pos_change(path_t &dynamic_path, float *current_x, float *
              if (d_len[k] > 0) 
             {
                 x_curr = (s_curr / d_len[k]) * dx[k] + x1[k].d[0];
-                y_curr = (s_curr / d_len[k]) * dy[k] + x1[k].d[1];
-                z_curr = (s_curr / d_len[k]) * dz[k] + x1[k].d[2];
-                if (dx[k] > 0) 
-                x_dot_curr = (dx[k] / abs(dx[k])) * v_curr;
-                y_dot_curr = (dy[k] / abs(dy[k])) * v_curr;
-                z_dot_curr = (dz[k] / abs(dz[k])) * v_curr;
+                if (abs(dx[k]) > 0) {
+                    x_dot_curr = (dx[k] / abs(dx[k])) * v_curr;
+                }
+                else {
+                    x_dot_curr = 0.0;
+                }               
+                y_curr = (s_curr / d_len[k]) * dy[k]  + x1[k].d[1];
+                if (abs(dy[k]) > 0) {
+                    y_dot_curr = (dy[k] / abs(dy[k])) * v_curr;
+                }
+                else {
+                    y_dot_curr = 0.0;
+                }
+                z_curr = (s_curr / d_len[k]) * dz[k]  + x1[k].d[2];
+                if (abs(dz[k]) > 0) {
+                    z_dot_curr = (dz[k] / abs(dz[k])) * v_curr;
+                }
+                else {
+                    z_dot_curr = 0.0;
+                }
             }   
             else
             {
