@@ -198,13 +198,16 @@ void takeoff_5_gen(float *current_x, float *current_y) {
     if (NUM_DRONES == 5) {
         x2[4].d[0] = (double)0.0;
         x2[4].d[1] = (double)0.0;
-        x2[4].d[2] = (double)target_z;
+        x2[4].d[2] = (double)target_z + VERT_OFFSET;
     }
+    
 
-    double t2 = 20.0;
+    double t2 = 10.0;
+    double t3 = t2 + 10;
 
-    int num_pts_1 = 100;
-    int num_pts_2 = 100;
+
+    int num_pts_1 = (t2 - t1) * 20;
+    int num_pts_2 = (t3 - t2) * 20;
     
     path_cleanup(TAKEOFF_POS);
     path[TAKEOFF_POS].len = num_pts_1 + num_pts_2;
@@ -317,7 +320,7 @@ void takeoff_5_gen(float *current_x, float *current_y) {
     if (NUM_DRONES == 5) {
         x3[4].d[0] = (double)0.0;
         x3[4].d[1] = (double)0.0;
-        x3[4].d[2] = (double)target_z;
+        x3[4].d[2] = (double)target_z + VERT_OFFSET;
     }
 
 
@@ -330,7 +333,6 @@ void takeoff_5_gen(float *current_x, float *current_y) {
 
     // Setup Segment #2
     quintic_spline_1d_t q_spline_2[NUM_DRONES];
-    double t3 = t2 + 10;
     for (int i = 0; i < NUM_DRONES; i++) {
         dx[i] = x3[i].d[0] - x2[i].d[0];
         dy[i] = x3[i].d[1] - x2[i].d[1];
@@ -431,11 +433,13 @@ void landing_5_gen(float *current_x, float *current_y, float current_z) {
             x2[i].d[2] = current_z;
         }
     }
+    x2[4].d[2] += VERT_OFFSET;
     
     double t2 = 10.0;
+    double t3 = t2 + 10.0;
 
-    int num_pts_1 = 100;
-    int num_pts_2 = 100;
+    int num_pts_1 = (t2 - t1) * 20;
+    int num_pts_2 = (t3 - t2) * 20;
     
     path_cleanup(LANDING_POS);
     path[LANDING_POS].len = num_pts_1 + num_pts_2;
@@ -560,7 +564,6 @@ void landing_5_gen(float *current_x, float *current_y, float current_z) {
 
     // Setup Segment #2
     quintic_spline_1d_t q_spline_2[NUM_DRONES];
-    double t3 = t2 + 20.0;
     for (int i = 0; i < NUM_DRONES; i++) {
         dx[i] = x3[i].d[0] - x2[i].d[0];
         dy[i] = x3[i].d[1] - x2[i].d[1];
