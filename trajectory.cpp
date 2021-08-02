@@ -174,13 +174,15 @@ void landing_gen(float *current_x, float *current_y, float current_z) {
 }
 
 void takeoff_5_gen(float *current_x, float *current_y) {
-    float wp_x_2[] = {current_x[0], current_x[1], current_x[2], current_x[3], (current_x[4] - X_OFFSET)};
+    printf("x waypoint 1: %f, %f, %f, %f, %f\n", current_x[0], current_x[1], current_x[2], current_x[3], current_x[4]);
+    float wp_x_2[] = {current_x[0], current_x[1], current_x[2], current_x[3], ((float)(current_x[4]) - (X_OFFSET))};
     float wp_z_1[] = {0.0, 0.0, 0.0, 0.0, 0.0};
     float wp_z_2[] = {OP_ALTITUDE, OP_ALTITUDE, OP_ALTITUDE, OP_ALTITUDE, OP_ALTITUDE};
     float *wp_x[] = {current_x, wp_x_2};
     float *wp_y[] = {current_y, current_y};
     float *wp_z[] = {wp_z_1, wp_z_2};
     double dt[] = {10.0, 10.0};
+    printf("x waypoint 2: %f, %f, %f, %f, %f\n", wp_x[1][0], wp_x[1][1], wp_x[1][2], wp_x[1][3], wp_x[1][4]);
     __waypoint_trajectory(wp_x, wp_y, wp_z, dt, 2, TAKEOFF_POS);
 }
 
@@ -293,12 +295,16 @@ static void __waypoint_trajectory(float **x_waypoints, float **y_waypoints, floa
         path_fragments[i].initialized = 0;
         path_fragments[i] = PATH_INITIALIZER;
         __dynamic_pos_change(path_fragments[i], x_waypoints[i], y_waypoints[i], z_waypoints[i], x_waypoints[i + 1], y_waypoints[i + 1], z_waypoints[i + 1], dt[i]);
+        for (int j = 0; j < (int)path_fragments[i].len; j++) {
+            printf("path %i 1 waypoint %i: %f, %f, %f\n", i, j, path_fragments[i].waypoints[j].x[0], path_fragments[i].waypoints[j].y[0], path_fragments[i].waypoints[j].z[0]);
+        }
     }
     
     int size = 0;
     for (int i = 0; i < (num_waypoints - 1); i++) {
         size += path_fragments[i].len;
     }
+    printf("my size is %i\n", size);
     
     path_cleanup(pos);
     path[pos].len = size;
@@ -319,12 +325,14 @@ static void __waypoint_trajectory(float **x_waypoints, float **y_waypoints, floa
                 path[pos].waypoints[k + acc].t = path[pos].waypoints[acc - 1].t + path_fragments[i].waypoints[k].t;
             }
             for (int p = 0; p < NUM_DRONES; p++) {
-                path[pos].waypoints[i].x[p] = path_fragments[i].waypoints[k].x[p];
-                path[pos].waypoints[i].y[p] = path_fragments[i].waypoints[k].y[p];
-                path[pos].waypoints[i].z[p] = path_fragments[i].waypoints[k].z[p];
-                path[pos].waypoints[i].x_dot[p] = path_fragments[i].waypoints[k].x_dot[p];
-                path[pos].waypoints[i].y_dot[p] = path_fragments[i].waypoints[k].y_dot[p];
-                path[pos].waypoints[i].z_dot[p] = path_fragments[i].waypoints[k].z_dot[p];
+                // printf("drone %i on path %i fed waypoint %f, %f, %f\n", p, i, path_fragments[i].waypoints[k].x[p], path_fragments[i].waypoints[k].y[p], path_fragments[i].waypoints[k].z[p]);
+                path[pos].waypoints[k + acc].x[p] = path_fragments[i].waypoints[k].x[p];
+                path[pos].waypoints[k + acc].y[p] = path_fragments[i].waypoints[k].y[p];
+                path[pos].waypoints[k + acc].z[p] = path_fragments[i].waypoints[k].z[p];
+                path[pos].waypoints[k + acc].x_dot[p] = path_fragments[i].waypoints[k].x_dot[p];
+                path[pos].waypoints[k + acc].y_dot[p] = path_fragments[i].waypoints[k].y_dot[p];
+                path[pos].waypoints[k + acc].z_dot[p] = path_fragments[i].waypoints[k].z_dot[p];
+                // printf("drone %i on path %i fed waypoint %f, %f, %f\n", p, i, path[pos].waypoints[k].x[p], path_fragments[i].waypoints[k].y[p], path_fragments[i].waypoints[k].z[p]);
             }
             path[pos].waypoints[i].flag = 0;
         }
@@ -343,6 +351,7 @@ static void __dynamic_pos_change(path_t &dynamic_path, float *current_x, float *
         x1[i].d[0] = current_x[i];
         x1[i].d[1] = current_y[i];
         x1[i].d[2] = current_z[i];
+        // printf("waypoint for %i: %f, %f, %f\n", i, x1[i].d[0], x1[i].d[1], x1[i].d[2]);
     }
 
     // 1.2 Intiialize target drone positions vectors
@@ -406,6 +415,7 @@ static void __dynamic_pos_change(path_t &dynamic_path, float *current_x, float *
                 x_curr = (s_curr / d_len[k]) * dx[k] + x1[k].d[0];
                 y_curr = (s_curr / d_len[k]) * dy[k] + x1[k].d[1];
                 z_curr = (s_curr / d_len[k]) * dz[k] + x1[k].d[2];
+                if (dx[k] > 0) 
                 x_dot_curr = (dx[k] / abs(dx[k])) * v_curr;
                 y_dot_curr = (dy[k] / abs(dy[k])) * v_curr;
                 z_dot_curr = (dz[k] / abs(dz[k])) * v_curr;
@@ -429,6 +439,7 @@ static void __dynamic_pos_change(path_t &dynamic_path, float *current_x, float *
             dynamic_path.waypoints[i].y_dot[k] = y_dot_curr;
             dynamic_path.waypoints[i].z_dot[k] = z_dot_curr;
             dynamic_path.waypoints[i].flag = 0;
+            // printf("waypoint for %i: %f, %f, %f\n", k, dynamic_path.waypoints[i].x[k], dynamic_path.waypoints[i].y[k], dynamic_path.waypoints[i].z[k]);
         }
     }
 
