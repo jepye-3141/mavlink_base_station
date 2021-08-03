@@ -2,9 +2,7 @@
 #include <rc/math/quaternion.h>
 #include <rc/time.h>
 #include <netinet/in.h>
-#define NUM_DRONES 5
-#define MSG_RATE 50000
-#define MAVLINK_COMMAND_INITIALIZER {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, {0.0, 0.0, 0.0}}
+#include "settings.h"
 
 struct address_node
 {

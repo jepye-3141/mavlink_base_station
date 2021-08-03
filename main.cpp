@@ -10,18 +10,44 @@
 #define PAUSE_PATTERN 0
 #define PAUSE_ON_STARTUP_PATTERN -100
 
+
 void hello() {
     printf("got message, sent from callback");
 }
 
-int main() 
+int main(int argc, char* argv[]) 
 {
     mav_cleanup();
-    printf("hello!\n");
     uint8_t id = (uint8_t)7;
 
     path_cleanup_all();
     path_init();
+
+    int c;
+    char* settings_file_path;
+    while ((c = getopt(argc, argv, "s:h")) != -1) {
+        switch (c)
+        {
+            // settings
+            case 's':
+                settings_file_path = optarg;
+                printf("User specified settings file:\n%s\n", settings_file_path);
+                break;
+            case 'h':
+                printf("\n");
+                printf(" Options\n");
+                printf(" -s\t\t<settings file> Specify settings file to use\n");
+                printf(" -h\t\tPrint this help message\n");
+                printf("\n");
+                printf("Some example settings files are included with the\n");
+                printf("source code. You must specify the location of one of these\n");
+                printf("files or ideally the location of your own settings file.\n");
+                printf("\n");
+
+            default:
+                break;
+        }
+    }
 
     if (path_load_from_file("guided_drone_waypoints.cfg", 0) == -1) {
         printf("Failed to initialize path");
