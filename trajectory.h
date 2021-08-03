@@ -6,17 +6,6 @@
 #include "math_utils.h"
 #include "mavlink_prot.h"
 
-#define NUM_UNIQUE_TRAJ 1
-#define NUM_DYNAMIC_TRAJ 2
-#define NUM_TRAJ NUM_UNIQUE_TRAJ+NUM_DYNAMIC_TRAJ
-#define TAKEOFF_POS NUM_TRAJ-2
-#define LANDING_POS NUM_TRAJ-1
-#define MAX_DRONES 5 // because wp files are generate w/ 5 drones 
-#define VERT_OFFSET 0.1
-#define OP_ALTITUDE -3.22
-#define TENSION_ALTITUDE -1.52
-#define X_OFFSET 1.075
-
 /**
  * @brief       The type of waypoint which paths comprise of
  */

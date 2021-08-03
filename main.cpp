@@ -10,18 +10,44 @@
 #define PAUSE_PATTERN 0
 #define PAUSE_ON_STARTUP_PATTERN -100
 
+
 void hello() {
     printf("got message, sent from callback");
 }
 
-int main() 
+int main(int argc, char* argv[]) 
 {
     mav_cleanup();
-    printf("hello!\n");
     uint8_t id = (uint8_t)7;
 
     path_cleanup_all();
     path_init();
+
+    int c;
+    char* settings_file_path;
+    while ((c = getopt(argc, argv, "s:h")) != -1) {
+        switch (c)
+        {
+            // settings
+            case 's':
+                settings_file_path = optarg;
+                printf("User specified settings file:\n%s\n", settings_file_path);
+                break;
+            case 'h':
+                printf("\n");
+                printf(" Options\n");
+                printf(" -s\t\t<settings file> Specify settings file to use\n");
+                printf(" -h\t\tPrint this help message\n");
+                printf("\n");
+                printf("Some example settings files are included with the\n");
+                printf("source code. You must specify the location of one of these\n");
+                printf("files or ideally the location of your own settings file.\n");
+                printf("\n");
+
+            default:
+                break;
+        }
+    }
 
     if (path_load_from_file("guided_drone_waypoints.cfg", 0) == -1) {
         printf("Failed to initialize path");
@@ -32,30 +58,30 @@ int main()
     // Don't worry. John from the past has you covered. The problem is the ports: you have to run rav_init with different port
     //    numbers, or else the addresses will be the same and the computer will become mightily confused. 
     // So, don't panic, change the ports.
-    if (mav_init(id, 1, "192.168.1.201", RC_MAV_DEFAULT_UDP_PORT, RC_MAV_DEFAULT_CONNECTION_TIMEOUT_US) == -1) {
-        printf("Failed to initialize mavlink1");
-        return -1;
-    }
+    // if (mav_init(id, 1, "192.168.1.201", RC_MAV_DEFAULT_UDP_PORT, RC_MAV_DEFAULT_CONNECTION_TIMEOUT_US) == -1) {
+    //     printf("Failed to initialize mavlink1");
+    //     return -1;
+    // }
     
-    if (mav_init(id, 2, "192.168.1.202", RC_MAV_DEFAULT_UDP_PORT + 1000, RC_MAV_DEFAULT_CONNECTION_TIMEOUT_US) == -1) {
-        printf("Failed to initialize mavlink1");
-        return -1;
-    }
+    // if (mav_init(id, 2, "192.168.1.202", RC_MAV_DEFAULT_UDP_PORT + 1000, RC_MAV_DEFAULT_CONNECTION_TIMEOUT_US) == -1) {
+    //     printf("Failed to initialize mavlink1");
+    //     return -1;
+    // }
 
-    if (mav_init(id, 3, "192.168.1.203", RC_MAV_DEFAULT_UDP_PORT + 2000, RC_MAV_DEFAULT_CONNECTION_TIMEOUT_US) == -1) {
-        printf("Failed to initialize mavlink1");
-        return -1;
-    }
+    // if (mav_init(id, 3, "192.168.1.203", RC_MAV_DEFAULT_UDP_PORT + 2000, RC_MAV_DEFAULT_CONNECTION_TIMEOUT_US) == -1) {
+    //     printf("Failed to initialize mavlink1");
+    //     return -1;
+    // }
 
-    if (mav_init(id, 4, "192.168.1.204", RC_MAV_DEFAULT_UDP_PORT + 3000, RC_MAV_DEFAULT_CONNECTION_TIMEOUT_US) == -1) {
-        printf("Failed to initialize mavlink1");
-        return -1;
-    }
+    // if (mav_init(id, 4, "192.168.1.204", RC_MAV_DEFAULT_UDP_PORT + 3000, RC_MAV_DEFAULT_CONNECTION_TIMEOUT_US) == -1) {
+    //     printf("Failed to initialize mavlink1");
+    //     return -1;
+    // }
 
-    if (mav_init(id, 5, "192.168.1.205", RC_MAV_DEFAULT_UDP_PORT + 4000, RC_MAV_DEFAULT_CONNECTION_TIMEOUT_US) == -1) {
-        printf("Failed to initialize mavlink1");
-        return -1;
-    }
+    // if (mav_init(id, 5, "192.168.1.205", RC_MAV_DEFAULT_UDP_PORT + 4000, RC_MAV_DEFAULT_CONNECTION_TIMEOUT_US) == -1) {
+    //     printf("Failed to initialize mavlink1");
+    //     return -1;
+    // }
     
 
     msg_t command_packets[NUM_DRONES];
@@ -150,6 +176,7 @@ int main()
                             printf("change traj, reset step!\n");
                         }
                         for (int k = 0; k < NUM_DRONES; k++) {
+                            // printf("command packet %i: %f, %f, %f\n", step, path[TAKEOFF_POS].waypoints[step].x[k], path[TAKEOFF_POS].waypoints[step].y[k], path[TAKEOFF_POS].waypoints[step].z[k]);
                             command_packets[k].x = path[TAKEOFF_POS].waypoints[step].x[k];
                             command_packets[k].y = path[TAKEOFF_POS].waypoints[step].y[k];
                             command_packets[k].z = path[TAKEOFF_POS].waypoints[step].z[k];
