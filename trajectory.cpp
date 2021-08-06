@@ -208,6 +208,37 @@ void landing_5_gen(float *current_x, float *current_y, float current_z) {
     __waypoint_trajectory(wp_x, wp_y, wp_z, dt, 3, LANDING_POS);
 }
 
+void test_trajectory(float *current_x, float *current_y, float current_z) {
+    float wp_x_3[] = {current_x[0] + 1.8};
+    float wp_x_5[] = {current_x[0] + 2.3};
+    float wp_x_8[] = {current_x[0] + 3.3};
+    float wp_x_13[] = {current_x[0] + 2.3};
+    float wp_x_16[] = {current_x[0] + 1.8};
+
+    float wp_y_2[] = {current_y[0] + 3.4};
+    float wp_y_4[] = {current_y[0] + 1.8};
+    float wp_y_9[] = {current_y[0] + 0.8};
+    float wp_y_12[] = {current_y[0] - 0.2};
+    float wp_y_17[] = {current_y[0] - 0.8};
+
+    float wp_z_6[] = {current_z + 0.8};
+    float wp_z_10[] = {current_z + 0.8};
+    float wp_z_14[] = {current_z + 0.8};
+
+    float dyaw_1 = M_PI / 2;
+    float dyaw_2 = M_PI / 2;
+    float dyaw_3 = -M_PI / 2;
+    float dyaw_4 = M_PI / 2;
+    float dyaw_5 = M_PI / 2;
+    float dyaw_6 = -M_PI / 2;
+    float dyaw_7 = M_PI / 2;
+    float dyaw_8 = M_PI / 2;
+
+
+    double dt[] = {17, 2, 9, 2, 8, 2, 3, 6, 6, 5, 2, 5, 6, 6, 5, 2, 5, 6, 6, 3, 2, 3, 2, 9, 2, 4};
+
+}
+
 static void __dynamic_z_change(float *current_x, float *current_y, float current_z, float target_z, int pos) {
     // current z position
     rc_vector_t z1[NUM_DRONES];

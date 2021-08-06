@@ -11,15 +11,6 @@
 #define OP_ALTITUDE -3.22
 #define TENSION_ALTITUDE -1.52
 #define X_OFFSET 1.075
-#define NUM_DRONES 5
+#define NUM_DRONES 1
 #define MSG_RATE 50000
 #define MAVLINK_COMMAND_INITIALIZER {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, {0.0, 0.0, 0.0}}
-
-typedef struct settings_t
-{
-    int num_waypoints_per_path[NUM_UNIQUE_TRAJ];
-    int *x_waypoints[NUM_UNIQUE_TRAJ];
-    int *y_waypoints[NUM_UNIQUE_TRAJ];
-    int *z_waypoints[NUM_UNIQUE_TRAJ];
-
-} settings_t;

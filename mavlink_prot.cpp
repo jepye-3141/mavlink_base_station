@@ -347,7 +347,7 @@ int send_new_series(struct msg_t new_message[NUM_DRONES])
         }
             
 
-        float rpy[] = {desired_roll, desired_pitch, 0.0};
+        float rpy[] = {0.0, 0.0, 0.0};
         printf("Packaging %f | %f | %f | %f | %f | %f | %f | %f | %f\n", new_message[i].x, new_message[i].y, new_message[i].z, new_message[i].x_dot, new_message[i].y_dot, new_message[i].z_dot, rpy[0], rpy[1], rpy[2]);
         mavlink_msg_simple_system_control_pack(system_id, MAV_COMP_ID_ALL, &(prep), (new_message[i].x), (new_message[i]).y, (new_message[i]).z, new_message[0].x_dot, new_message[0].y_dot, new_message[0].z_dot, rpy, 0.0, 0.0, 0.0, 0.0);
         msg_series[i] = prep;
