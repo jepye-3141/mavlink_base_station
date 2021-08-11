@@ -1,5 +1,5 @@
 CXX = g++
-CXXFLAGS = -Wall
+CXXFLAGS = -Wall -Wno-narrowing
 SOURCE = main.cpp printing.cpp mavlink_prot.cpp trajectory.cpp math_utils.cpp 
 
 main: main.o printing.o

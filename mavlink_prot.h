@@ -20,6 +20,8 @@ struct msg_t
     float y_dot;
     float z_dot;
     float rpy[3];
+    float rpy_dot[3];
+    int yaw_flag;
 };
 
 int mav_init(uint8_t sysid, int dest_id, const char* dest_ip, uint16_t port, uint64_t connection_timeout_us);

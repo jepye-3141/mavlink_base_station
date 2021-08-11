@@ -321,35 +321,55 @@ int send_new_series(struct msg_t new_message[NUM_DRONES])
     mavlink_message_t prep;
     
     for (int i = 0; i < NUM_DRONES; i++) {
-        float desired_roll;
-        float desired_pitch;
-        switch (i) {
-            case 0:
-                desired_roll = 0.04;
-                desired_pitch = -0.04;
-                break;
-            case 1:
-                desired_roll = 0.04;
-                desired_pitch = 0.04;
-                break;
-            case 2:
-                desired_roll = -0.04;
-                desired_pitch = 0.04;
-                break;
-            case 3:
-                desired_roll = -0.04;
-                desired_pitch = -0.04;
-                break;
-            default:
-                desired_roll = 0;
-                desired_pitch = 0;
-                break;
-        }
+        // float desired_roll;
+        // float desired_pitch;
+        // switch (i) {
+        //     case 0:
+        //         desired_roll = 0.04;
+        //         desired_pitch = -0.04;
+        //         break;
+        //     case 1:
+        //         desired_roll = 0.04;
+        //         desired_pitch = 0.04;
+        //         break;
+        //     case 2:
+        //         desired_roll = -0.04;
+        //         desired_pitch = 0.04;
+        //         break;
+        //     case 3:
+        //         desired_roll = -0.04;
+        //         desired_pitch = -0.04;
+        //         break;
+        //     default:
+        //         desired_roll = 0;
+        //         desired_pitch = 0;
+        //         break;
+        // }
+        
+        float rpy[3];
+        float rpy_dot[3];
+        printf("yaw received: %f\n", new_message[i].rpy[2]);
+        if (new_message[i].yaw_flag == 1) {
+            rpy[0] = 0.0;
+            rpy[1] = 0.0;
+            rpy[2] = new_message[i].rpy[2];
             
+            rpy_dot[0] = 0.0;
+            rpy_dot[1] = 0.0;
+            rpy_dot[2] = new_message[i].rpy_dot[2];
+        }
+        else {
+            rpy[0] = 0.0;
+            rpy[1] = 0.0;
+            rpy[2] = 0.0;
+            
+            rpy_dot[0] = 0.0;
+            rpy_dot[1] = 0.0;
+            rpy_dot[2] = 0.0;
+        }
+        printf("Packaging %f | %f | %f | %f | %f | %f | %f | %f | %f | %f\n", new_message[i].x, new_message[i].y, new_message[i].z, new_message[i].x_dot, new_message[i].y_dot, new_message[i].z_dot, rpy[0], rpy[1], rpy[2], rpy_dot[2]);
 
-        float rpy[] = {0.0, 0.0, 0.0};
-        printf("Packaging %f | %f | %f | %f | %f | %f | %f | %f | %f\n", new_message[i].x, new_message[i].y, new_message[i].z, new_message[i].x_dot, new_message[i].y_dot, new_message[i].z_dot, rpy[0], rpy[1], rpy[2]);
-        mavlink_msg_simple_system_control_pack(system_id, MAV_COMP_ID_ALL, &(prep), (new_message[i].x), (new_message[i]).y, (new_message[i]).z, new_message[0].x_dot, new_message[0].y_dot, new_message[0].z_dot, rpy, 0.0, 0.0, 0.0, 0.0);
+        mavlink_msg_simple_system_control_pack(system_id, MAV_COMP_ID_ALL, &(prep), (new_message[i].x), (new_message[i]).y, (new_message[i]).z, new_message[0].x_dot, new_message[0].y_dot, new_message[0].z_dot, rpy, rpy_dot[0], rpy_dot[1], rpy_dot[2], 0.0);
         msg_series[i] = prep;
     }
     

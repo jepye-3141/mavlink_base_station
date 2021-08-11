@@ -36,6 +36,8 @@ static void __dynamic_pos_change(path_t &dynamic_path, float *current_x, float *
 
 static void __waypoint_trajectory(float **x_waypoints, float **y_waypoints, float **z_waypoints, double *dt, int num_waypoints, int pos );
 
+static void __yaw_spline(float *yaw_waypoints, double *dt, int num_waypoints, int pos);
+
 /**
  * ********************************
  */
@@ -208,35 +210,161 @@ void landing_5_gen(float *current_x, float *current_y, float current_z) {
     __waypoint_trajectory(wp_x, wp_y, wp_z, dt, 3, LANDING_POS);
 }
 
-void test_trajectory(float *current_x, float *current_y, float current_z) {
+void test_trajectory(float *current_x, float *current_y, float current_z, int pos) {
+    float wp_x_1[] = {current_x[0]};
+    float wp_x_2[] = {current_x[0]};
+    float wp_x_r1[] = {current_x[0]};
+
     float wp_x_3[] = {current_x[0] + 1.8};
+    float wp_x_r2[] = {current_x[0] + 1.8};
+
+    float wp_x_4[] = {current_x[0] + 1.8};
+    float wp_x_r3[] = {current_x[0] + 1.8};
+
     float wp_x_5[] = {current_x[0] + 2.3};
+    float wp_x_6[] = {current_x[0] + 2.3};
+    float wp_x_7[] = {current_x[0] + 2.3};
     float wp_x_8[] = {current_x[0] + 3.3};
+    float wp_x_r4[] = {current_x[0] + 3.3};
+
+    float wp_x_9[] = {current_x[0] + 3.3};
+    float wp_x_10[] = {current_x[0] + 3.3};
+    float wp_x_11[] = {current_x[0] + 3.3};
+    float wp_x_12[] = {current_x[0] + 3.3};
+    float wp_x_r5[] = {current_x[0] + 3.3};
+
     float wp_x_13[] = {current_x[0] + 2.3};
+    float wp_x_14[] = {current_x[0] + 2.3};
+    float wp_x_15[] = {current_x[0] + 2.3};
     float wp_x_16[] = {current_x[0] + 1.8};
+    float wp_x_r6[] = {current_x[0] + 1.8};
 
+    float wp_x_17[] = {current_x[0] + 1.8};
+    float wp_x_r7[] = {current_x[0] + 1.8};
+
+    float wp_x_18[] = {current_x[0]};
+    float wp_x_r8[] = {current_x[0]};
+
+    float wp_x_19[] = {current_x[0]};
+////////////////////////////////////////////////////////////////
+    float wp_y_1[] = {current_y[0]};
     float wp_y_2[] = {current_y[0] + 3.4};
+    float wp_y_r1[] = {current_y[0] + 3.4};
+
+    float wp_y_3[] = {current_y[0] + 3.4};
+    float wp_y_r2[] = {current_y[0] + 3.4};
+
     float wp_y_4[] = {current_y[0] + 1.8};
+    float wp_y_r3[] = {current_y[0] + 1.8};
+
+    float wp_y_5[] = {current_y[0] + 1.8};
+    float wp_y_6[] = {current_y[0] + 1.8};
+    float wp_y_7[] = {current_y[0] + 1.8};
+    float wp_y_8[] = {current_y[0] + 1.8};
+    float wp_y_r4[] = {current_y[0] + 1.8};
+
     float wp_y_9[] = {current_y[0] + 0.8};
+    float wp_y_10[] = {current_y[0] + 0.8};
+    float wp_y_11[] = {current_y[0] + 0.8};
     float wp_y_12[] = {current_y[0] - 0.2};
+    float wp_y_r5[] = {current_y[0] - 0.2};
+
+    float wp_y_13[] = {current_y[0] - 0.2};
+    float wp_y_14[] = {current_y[0] - 0.2};
+    float wp_y_15[] = {current_y[0] - 0.2};
+    float wp_y_16[] = {current_y[0] - 0.2};
+    float wp_y_r6[] = {current_y[0] - 0.2};
+
     float wp_y_17[] = {current_y[0] - 0.8};
+    float wp_y_r7[] = {current_y[0] - 0.8};
 
-    float wp_z_6[] = {current_z + 0.8};
-    float wp_z_10[] = {current_z + 0.8};
-    float wp_z_14[] = {current_z + 0.8};
+    float wp_y_18[] = {current_y[0] - 0.8};
+    float wp_y_r8[] = {current_y[0] - 0.8};
 
-    float dyaw_1 = M_PI / 2;
-    float dyaw_2 = M_PI / 2;
-    float dyaw_3 = -M_PI / 2;
-    float dyaw_4 = M_PI / 2;
-    float dyaw_5 = M_PI / 2;
-    float dyaw_6 = -M_PI / 2;
-    float dyaw_7 = M_PI / 2;
-    float dyaw_8 = M_PI / 2;
+    float wp_y_19[] = {current_y[0]};
+///////////////////////////////////////////////////////////////
+    float wp_z_1[] = {current_z};
+    float wp_z_2[] = {current_z};
+    float wp_z_r1[] = {current_z};
 
+    float wp_z_3[] = {current_z};
+    float wp_z_r2[] = {current_z};
+
+    float wp_z_4[] = {current_z};
+    float wp_z_r3[] = {current_z};
+
+    float wp_z_5[] = {current_z};
+    float wp_z_6[] = {current_z - 0.8};
+    float wp_z_7[] = {current_z};
+    float wp_z_8[] = {current_z};
+    float wp_z_r4[] = {current_z};
+
+    float wp_z_9[] = {current_z};
+    float wp_z_10[] = {current_z - 0.8};
+    float wp_z_11[] = {current_z};
+    float wp_z_12[] = {current_z};
+    float wp_z_r5[] = {current_z};
+
+    float wp_z_13[] = {current_z};
+    float wp_z_14[] = {current_z - 0.8};
+    float wp_z_15[] = {current_z};
+    float wp_z_16[] = {current_z};
+    float wp_z_r6[] = {current_z};
+
+    float wp_z_17[] = {current_z};
+    float wp_z_r7[] = {current_z};
+
+    float wp_z_18[] = {current_z};
+    float wp_z_r8[] = {current_z};
+
+    float wp_z_19[] = {current_z};
+///////////////////////////////////////////////////////////////
+    float wp_yaw_1 = 0;
+    float wp_yaw_2 = 0;
+
+    float wp_yaw_r1 = -M_PI_2;
+    float wp_yaw_3 = -M_PI_2;
+
+    float wp_yaw_r2 = -M_PI;
+    float wp_yaw_4 = -M_PI;
+
+    float wp_yaw_r3 = -M_PI_2;
+    float wp_yaw_5 = -M_PI_2;
+    float wp_yaw_6 = -M_PI_2;
+    float wp_yaw_7 = -M_PI_2;
+    float wp_yaw_8 = -M_PI_2;
+
+    float wp_yaw_r4 = -M_PI;
+    float wp_yaw_9 = -M_PI;
+    float wp_yaw_10 = -M_PI;
+    float wp_yaw_11 = -M_PI;
+    float wp_yaw_12 = -M_PI;
+
+    float wp_yaw_r5 = M_PI_2;
+    float wp_yaw_13 = M_PI_2;
+    float wp_yaw_14 = M_PI_2;
+    float wp_yaw_15 = M_PI_2;
+    float wp_yaw_16 = M_PI_2;
+
+    float wp_yaw_r6 = M_PI;
+    float wp_yaw_17 = M_PI;
+
+    float wp_yaw_r7 = M_PI_2;
+    float wp_yaw_18 = M_PI_2;
+
+    float wp_yaw_r8 = 0;
+    float wp_yaw_19 = 0;
+/////////////////////////////////////////////////////////////////
+
+    float *wp_x[] = {wp_x_1, wp_x_2, wp_x_r1, wp_x_3, wp_x_r2, wp_x_4, wp_x_r3, wp_x_5, wp_x_6, wp_x_7, wp_x_8, wp_x_r4, wp_x_9, wp_x_10, wp_x_11, wp_x_12, wp_x_r5, wp_x_13, wp_x_14, wp_x_15, wp_x_16, wp_x_r6, wp_x_17, wp_x_r7, wp_x_18, wp_x_r8, wp_x_19};
+    float *wp_y[] = {wp_y_1, wp_y_2, wp_y_r1, wp_y_3, wp_y_r2, wp_y_4, wp_y_r3, wp_y_5, wp_y_6, wp_y_7, wp_y_8, wp_y_r4, wp_y_9, wp_y_10, wp_y_11, wp_y_12, wp_y_r5, wp_y_13, wp_y_14, wp_y_15, wp_y_16, wp_y_r6, wp_y_17, wp_y_r7, wp_y_18, wp_y_r8, wp_y_19};
+    float *wp_z[] = {wp_z_1, wp_z_2, wp_z_r1, wp_z_3, wp_z_r2, wp_z_4, wp_z_r3, wp_z_5, wp_z_6, wp_z_7, wp_z_8, wp_z_r4, wp_z_9, wp_z_10, wp_z_11, wp_z_12, wp_z_r5, wp_z_13, wp_z_14, wp_z_15, wp_z_16, wp_z_r6, wp_z_17, wp_z_r7, wp_z_18, wp_z_r8, wp_z_19};
+    float wp_yaw[] = {wp_yaw_1, wp_yaw_2, wp_yaw_r1, wp_yaw_3, wp_yaw_r2, wp_yaw_4, wp_yaw_r3, wp_yaw_5, wp_yaw_6, wp_yaw_7, wp_yaw_8, wp_yaw_r4, wp_yaw_9, wp_yaw_10, wp_yaw_11, wp_yaw_12, wp_yaw_r5, wp_yaw_13, wp_yaw_14, wp_yaw_15, wp_yaw_16, wp_yaw_r6, wp_yaw_17, wp_yaw_r7, wp_yaw_18, wp_yaw_r8, wp_yaw_19};
 
     double dt[] = {17, 2, 9, 2, 8, 2, 3, 6, 6, 5, 2, 5, 6, 6, 5, 2, 5, 6, 6, 3, 2, 3, 2, 9, 2, 4};
 
+    __waypoint_trajectory(wp_x, wp_y, wp_z, dt, 24, pos);
+    __yaw_spline(wp_yaw, dt, 24, pos);
 }
 
 static void __dynamic_z_change(float *current_x, float *current_y, float current_z, float target_z, int pos) {
@@ -278,10 +406,6 @@ static void __dynamic_z_change(float *current_x, float *current_y, float current
     double t_curr = 0;
     double s_curr = 0;
     double v_curr = 0;
-    double x_curr = 0;
-    double x_dot_curr = 0;
-    double y_curr = 0;
-    double y_dot_curr = 0;
     double z_curr = 0;
     double z_dot_curr = 0;
 
@@ -337,6 +461,63 @@ static void __dynamic_z_change(float *current_x, float *current_y, float current
 
     path[pos].initialized = 1;
     // return 0;
+}
+
+static void __yaw_spline(float *yaw_waypoints, double *dt, int num_waypoints, int pos) {
+
+    int prev_pts = 0;
+    for (int i = 0; i < num_waypoints - 1; i++) {
+        float starting_yaw = yaw_waypoints[i];
+        float target_yaw = yaw_waypoints[i + 1];
+        int num_pts = dt[i] * 20;
+
+        double t_curr = 0;
+        double s_curr = 0;
+        double v_curr = 0;
+        double yaw_curr = 0;
+        double yaw_dot_curr = 0;
+        double dyaw = 0;
+        double d_len = 0;
+
+        quintic_spline_1d_t q_spline_1;
+        dyaw = target_yaw - starting_yaw;
+        d_len = sqrt(dyaw * dyaw);
+        q_spline_1 = make_1d_quintic_spline(d_len, dt[i]);
+
+        printf("starting at  %i\n", prev_pts);
+        for (int k = prev_pts; k < num_pts + prev_pts; k++) {
+            t_curr = ( ((double) k - prev_pts) / ((double) (num_pts-1))) * (dt[i]);
+            s_curr = compute_spline_position(&q_spline_1, t_curr);
+            v_curr = compute_spline_velocity(&q_spline_1, t_curr);
+
+            printf("d_len yaw: %f\n", d_len);
+
+            if (d_len > 0)
+            {
+                yaw_curr = (s_curr / d_len) * dyaw + starting_yaw;
+                if (abs(dyaw) > 0) {
+                    yaw_dot_curr = (dyaw / abs(dyaw)) * v_curr;
+                }
+                else {
+                    yaw_dot_curr = 0.0;
+                }
+            }
+            else {
+                yaw_curr = starting_yaw;
+                yaw_dot_curr = 0.0;
+            }
+
+            path[pos].waypoints[k].t = t_curr;
+            for (int j = 0; j < NUM_DRONES; j++) {
+                path[pos].waypoints[k].yaw[j] = yaw_curr;
+                path[pos].waypoints[k].yaw_dot[j] = yaw_dot_curr;
+            }
+            path[pos].waypoints[k].yaw_flag = 1;
+            printf("yaw waypoint %i: pos %f vel %f\n", k, path[pos].waypoints[k].yaw[0], path[pos].waypoints[k].yaw_dot[0]);            
+        }
+        prev_pts += num_pts;
+
+    }
 }
 
 static void __waypoint_trajectory(float **x_waypoints, float **y_waypoints, float **z_waypoints, double *dt, int num_waypoints, int pos ) {
@@ -417,11 +598,8 @@ static void __dynamic_pos_change(path_t &dynamic_path, float *current_x, float *
         x2[i].d[1] = target_y[i];
         x2[i].d[2] = target_z[i];
     }
-    x2[4].d[2] += VERT_OFFSET;
+    // x2[4].d[2] += VERT_OFFSET;
     
-    double t2 = 10.0;
-    double t3 = t2 + 10.0;
-
     // 2 Normalize number of points in spline to message send rate
     int num_pts = dt * 20; 
 
