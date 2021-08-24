@@ -282,13 +282,13 @@ int main(int argc, char* argv[])
                             command_packets[k].rpy[0] = 0;
                             command_packets[k].rpy[1] = 0;
                             if (path[pattern - 1].waypoints[step].yaw_flag == 1) {
-                                printf("enabling yaw\n");
-                                printf("yaw received to pos %f vel %f\n", path[pattern - 1].waypoints[step].yaw[0], path[pattern - 1].waypoints[step].yaw_dot[0]);
+                                // printf("enabling yaw\n");
+                                // printf("yaw received to pos %f vel %f\n", path[pattern - 1].waypoints[step].yaw[0], path[pattern - 1].waypoints[step].yaw_dot[0]);
 
                                 command_packets[k].yaw_flag = 1;
                                 command_packets[k].rpy[2] = path[pattern - 1].waypoints[step].yaw[0];
                                 command_packets[k].rpy_dot[2] = path[pattern - 1].waypoints[step].yaw_dot[0];
-                                printf("yaw set to pos %f vel %f\n", command_packets[k].rpy[2], command_packets[k].rpy_dot[2]);
+                                // printf("yaw set to pos %f vel %f\n", command_packets[k].rpy[2], command_packets[k].rpy_dot[2]);
                             }
                             else {
                                 command_packets[k].rpy[2] = 0;

@@ -348,7 +348,7 @@ int send_new_series(struct msg_t new_message[NUM_DRONES])
         
         float rpy[3];
         float rpy_dot[3];
-        printf("yaw received: %f\n", new_message[i].rpy[2]);
+        // printf("yaw received: %f\n", new_message[i].rpy[2]);
         if (new_message[i].yaw_flag == 1) {
             rpy[0] = 0.0;
             rpy[1] = 0.0;
