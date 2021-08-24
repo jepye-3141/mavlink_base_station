@@ -58,10 +58,10 @@ int main(int argc, char* argv[])
     // Don't worry. John from the past has you covered. The problem is the ports: you have to run rav_init with different port
     //    numbers, or else the addresses will be the same and the computer will become mightily confused. 
     // So, don't panic, change the ports.
-    // if (mav_init(id, 1, "192.168.1.201", RC_MAV_DEFAULT_UDP_PORT, RC_MAV_DEFAULT_CONNECTION_TIMEOUT_US) == -1) {
-    //     printf("Failed to initialize mavlink1");
-    //     return -1;
-    // }
+    if (mav_init(id, 1, "192.168.8.1", RC_MAV_DEFAULT_UDP_PORT, RC_MAV_DEFAULT_CONNECTION_TIMEOUT_US) == -1) {
+        printf("Failed to initialize mavlink1");
+        return -1;
+    }
     
     // if (mav_init(id, 2, "192.168.1.202", RC_MAV_DEFAULT_UDP_PORT + 1000, RC_MAV_DEFAULT_CONNECTION_TIMEOUT_US) == -1) {
     //     printf("Failed to initialize mavlink1");
