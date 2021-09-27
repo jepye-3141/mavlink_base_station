@@ -363,8 +363,8 @@ void test_trajectory(float *current_x, float *current_y, float current_z, int po
 
     double dt[] = {17, 2, 9, 2, 8, 2, 3, 6, 6, 5, 2, 5, 6, 6, 5, 2, 5, 6, 6, 3, 2, 3, 2, 9, 2, 4};
 
-    __waypoint_trajectory(wp_x, wp_y, wp_z, dt, 24, pos);
-    __yaw_spline(wp_yaw, dt, 24, pos);
+    __waypoint_trajectory(wp_x, wp_y, wp_z, dt, 27, pos);
+    __yaw_spline(wp_yaw, dt, 27, pos);
 }
 
 static void __dynamic_z_change(float *current_x, float *current_y, float current_z, float target_z, int pos) {

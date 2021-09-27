@@ -105,11 +105,11 @@ int main(int argc, char* argv[])
 
     const int scope = SCOPE_PATTERNN_ONLY;
     int step = 0;
-    command_packets[0] = {1.075, 1.075, 0.0, 0.0, 0.0, 0.0, {0.0, 0.0, 0.0}};
-    command_packets[1] = {-1.075, 1.075, 0.0, 0.0, 0.0, 0.0, {0.0, 0.0, 0.0}};
-    command_packets[2] = {-1.075, -1.075, 0.0, 0.0, 0.0, 0.0, {0.0, 0.0, 0.0}};
-    command_packets[3] = {1.075, -1.075, 0.0, 0.0, 0.0, 0.0, {0.0, 0.0, 0.0}};
-    command_packets[4] = {1.075, 0.0, 0.0, 0.0, 0.0, 0.0, {0.0, 0.0, 0.0}};
+    command_packets[0] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, {0.0, 0.0, 0.0}};
+    // command_packets[1] = {-1.075, 1.075, 0.0, 0.0, 0.0, 0.0, {0.0, 0.0, 0.0}};
+    // command_packets[2] = {-1.075, -1.075, 0.0, 0.0, 0.0, 0.0, {0.0, 0.0, 0.0}};
+    // command_packets[3] = {1.075, -1.075, 0.0, 0.0, 0.0, 0.0, {0.0, 0.0, 0.0}};
+    // command_packets[4] = {1.075, 0.0, 0.0, 0.0, 0.0, 0.0, {0.0, 0.0, 0.0}};
 
     // printKeybindings();
 
@@ -229,6 +229,8 @@ int main(int argc, char* argv[])
                             printf("Invalid pattern, reverting to previous pattern");
                             pattern = prev_pattern;
                         }
+
+                        // TODO throw out offset, change everything to current values
                         if (prev_pattern != pattern && pattern != PAUSE_PATTERN && prev_pattern != PAUSE_PATTERN) {
                             for (int i = 0; i < NUM_DRONES; i++) {
                                 offset_x[i] = current_x[i];
@@ -254,7 +256,7 @@ int main(int argc, char* argv[])
                                 step = 0;
                                 break;
                             }
-                            if (RESPECT_TRAJECTORY_Z == 0) {
+                            if (RESPECT_TRAJECTORY_Z == 1) {
                                 if (abs((offset_z[i]) - path[pattern - 1].waypoints[0].z[i]) > 0.05) {
                                     printf("\nError: starting waypoint of trajectory does not align with end waypoint of previous trajectory.\n");
                                     step = 0;
@@ -263,6 +265,7 @@ int main(int argc, char* argv[])
                             }
                         }
 
+                        // TODO: Add dynamic trajectory based on starting position
                         for (int k = 0; k < NUM_DRONES; k++) {
                             // got rid of dynamic offsets 
                             // command_packets[k].x = path[pattern - 1].waypoints[step].x[k] + offset_x;
