@@ -58,7 +58,7 @@ int main(int argc, char* argv[])
     // Don't worry. John from the past has you covered. The problem is the ports: you have to run rav_init with different port
     //    numbers, or else the addresses will be the same and the computer will become mightily confused. 
     // So, don't panic, change the ports.
-    if (mav_init(id, 1, "192.168.8.1", RC_MAV_DEFAULT_UDP_PORT, RC_MAV_DEFAULT_CONNECTION_TIMEOUT_US) == -1) {
+    if (mav_init(id, 1, "192.168.1.100", RC_MAV_DEFAULT_UDP_PORT, RC_MAV_DEFAULT_CONNECTION_TIMEOUT_US) == -1) {
         printf("Failed to initialize mavlink1");
         return -1;
     }
@@ -95,7 +95,7 @@ int main(int argc, char* argv[])
     float offset_z[NUM_DRONES];
 
     for (int i = 0; i < NUM_DRONES; i++) {
-        current_x[i] = 0.0;
+        current_x[i] = -7.5;
         current_y[i] = 0.0;
         current_z[i] = 0.0;
         offset_x[i] = 0.0;
@@ -105,7 +105,7 @@ int main(int argc, char* argv[])
 
     const int scope = SCOPE_PATTERNN_ONLY;
     int step = 0;
-    command_packets[0] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, {0.0, 0.0, 0.0}};
+    command_packets[0] = {-7.5, 0.0, 0.0, 0.0, 0.0, 0.0, {0.0, 0.0, 0.0}};
     // command_packets[1] = {-1.075, 1.075, 0.0, 0.0, 0.0, 0.0, {0.0, 0.0, 0.0}};
     // command_packets[2] = {-1.075, -1.075, 0.0, 0.0, 0.0, 0.0, {0.0, 0.0, 0.0}};
     // command_packets[3] = {1.075, -1.075, 0.0, 0.0, 0.0, 0.0, {0.0, 0.0, 0.0}};
