@@ -19,9 +19,11 @@ typedef struct waypoint_t
     double z_dot[MAX_DRONES];
     // double r[MAX_DRONES];
     // double p[MAX_DRONES];
-    // double yaw[MAX_DRONES];
+    double yaw[MAX_DRONES];
+    double yaw_dot[MAX_DRONES];
     double t;                 ///< time
     int flag;  ///< flag to specify state transitions, etc. (included to "future proof")
+    int yaw_flag;
 
 } waypoint_t;
 
@@ -99,6 +101,8 @@ float compute_spline_position(quintic_spline_1d_t* the_spline, float t);
  * @return      1d position along spline
  */
 float compute_spline_velocity(quintic_spline_1d_t* the_spline, float t);
+
+void test_trajectory(float *current_x, float *current_y, float current_z, int pos);
 
 #define TIME_TRANSITION_FLAG 0
 #define POS_TRANSITION_FLAG 1

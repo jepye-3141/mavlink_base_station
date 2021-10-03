@@ -58,10 +58,10 @@ int main(int argc, char* argv[])
     // Don't worry. John from the past has you covered. The problem is the ports: you have to run rav_init with different port
     //    numbers, or else the addresses will be the same and the computer will become mightily confused. 
     // So, don't panic, change the ports.
-    // if (mav_init(id, 1, "192.168.1.201", RC_MAV_DEFAULT_UDP_PORT, RC_MAV_DEFAULT_CONNECTION_TIMEOUT_US) == -1) {
-    //     printf("Failed to initialize mavlink1");
-    //     return -1;
-    // }
+    if (mav_init(id, 1, "192.168.1.100", RC_MAV_DEFAULT_UDP_PORT, RC_MAV_DEFAULT_CONNECTION_TIMEOUT_US) == -1) {
+        printf("Failed to initialize mavlink1");
+        return -1;
+    }
     
     // if (mav_init(id, 2, "192.168.1.202", RC_MAV_DEFAULT_UDP_PORT + 1000, RC_MAV_DEFAULT_CONNECTION_TIMEOUT_US) == -1) {
     //     printf("Failed to initialize mavlink1");
@@ -95,7 +95,7 @@ int main(int argc, char* argv[])
     float offset_z[NUM_DRONES];
 
     for (int i = 0; i < NUM_DRONES; i++) {
-        current_x[i] = 0.0;
+        current_x[i] = -7.5;
         current_y[i] = 0.0;
         current_z[i] = 0.0;
         offset_x[i] = 0.0;
@@ -105,11 +105,11 @@ int main(int argc, char* argv[])
 
     const int scope = SCOPE_PATTERNN_ONLY;
     int step = 0;
-    command_packets[0] = {1.075, 1.075, 0.0, 0.0, 0.0, 0.0, {0.0, 0.0, 0.0}};
-    command_packets[1] = {-1.075, 1.075, 0.0, 0.0, 0.0, 0.0, {0.0, 0.0, 0.0}};
-    command_packets[2] = {-1.075, -1.075, 0.0, 0.0, 0.0, 0.0, {0.0, 0.0, 0.0}};
-    command_packets[3] = {1.075, -1.075, 0.0, 0.0, 0.0, 0.0, {0.0, 0.0, 0.0}};
-    command_packets[4] = {1.075, 0.0, 0.0, 0.0, 0.0, 0.0, {0.0, 0.0, 0.0}};
+    command_packets[0] = {-7.5, 0.0, 0.0, 0.0, 0.0, 0.0, {0.0, 0.0, 0.0}};
+    // command_packets[1] = {-1.075, 1.075, 0.0, 0.0, 0.0, 0.0, {0.0, 0.0, 0.0}};
+    // command_packets[2] = {-1.075, -1.075, 0.0, 0.0, 0.0, 0.0, {0.0, 0.0, 0.0}};
+    // command_packets[3] = {1.075, -1.075, 0.0, 0.0, 0.0, 0.0, {0.0, 0.0, 0.0}};
+    // command_packets[4] = {1.075, 0.0, 0.0, 0.0, 0.0, 0.0, {0.0, 0.0, 0.0}};
 
     // printKeybindings();
 
@@ -183,9 +183,9 @@ int main(int argc, char* argv[])
                             command_packets[k].x_dot = path[TAKEOFF_POS].waypoints[step].x_dot[k];
                             command_packets[k].y_dot = path[TAKEOFF_POS].waypoints[step].y_dot[k];
                             command_packets[k].z_dot = path[TAKEOFF_POS].waypoints[step].z_dot[k];
-                            command_packets[k].rpy[TAKEOFF_POS] = 0;
-                            command_packets[k].rpy[TAKEOFF_POS] = 0;
-                            command_packets[k].rpy[TAKEOFF_POS] = 0;
+                            command_packets[k].rpy[0] = 0;
+                            command_packets[k].rpy[1] = 0;
+                            command_packets[k].rpy[2] = 0;
                         }
                         break;
                     case LANDING_PATTERN:
@@ -219,9 +219,9 @@ int main(int argc, char* argv[])
                             command_packets[k].x_dot = path[LANDING_POS].waypoints[step].x_dot[k];
                             command_packets[k].y_dot = path[LANDING_POS].waypoints[step].y_dot[k];
                             command_packets[k].z_dot = path[LANDING_POS].waypoints[step].z_dot[k];
-                            command_packets[k].rpy[LANDING_POS] = 0;
-                            command_packets[k].rpy[LANDING_POS] = 0;
-                            command_packets[k].rpy[LANDING_POS] = 0;
+                            command_packets[k].rpy[0] = 0;
+                            command_packets[k].rpy[1] = 0;
+                            command_packets[k].rpy[2] = 0;
                         }
                         break;
                     default:
@@ -229,6 +229,8 @@ int main(int argc, char* argv[])
                             printf("Invalid pattern, reverting to previous pattern");
                             pattern = prev_pattern;
                         }
+
+                        // TODO throw out offset, change everything to current values
                         if (prev_pattern != pattern && pattern != PAUSE_PATTERN && prev_pattern != PAUSE_PATTERN) {
                             for (int i = 0; i < NUM_DRONES; i++) {
                                 offset_x[i] = current_x[i];
@@ -244,27 +246,58 @@ int main(int argc, char* argv[])
                             printf("change traj, reset step and record offset!\n");
                         }
 
+                        if (step == 0) {
+                            test_trajectory(current_x, current_y, OP_ALTITUDE, 1);
+                        }
+
                         for (int i = 0; i < NUM_DRONES; i++) {
                             if (abs((offset_x[i]) - path[pattern - 1].waypoints[0].x[i]) > 0.05 || abs(offset_y[i] - path[pattern - 1].waypoints[0].y[i]) > 0.05) {
                                 printf("\nError: starting waypoint of trajectory does not align with end waypoint of previous trajectory.\n");
                                 step = 0;
                                 break;
                             }
+                            if (RESPECT_TRAJECTORY_Z == 1) {
+                                if (abs((offset_z[i]) - path[pattern - 1].waypoints[0].z[i]) > 0.05) {
+                                    printf("\nError: starting waypoint of trajectory does not align with end waypoint of previous trajectory.\n");
+                                    step = 0;
+                                    break;
+                                }
+                            }
                         }
 
+                        // TODO: Add dynamic trajectory based on starting position
                         for (int k = 0; k < NUM_DRONES; k++) {
                             // got rid of dynamic offsets 
                             // command_packets[k].x = path[pattern - 1].waypoints[step].x[k] + offset_x;
                             // command_packets[k].y = path[pattern - 1].waypoints[step].y[k] + offset_y;
                             command_packets[k].x = path[pattern - 1].waypoints[step].x[k];
                             command_packets[k].y = path[pattern - 1].waypoints[step].y[k];
-                            command_packets[k].z = offset_z[k];
                             command_packets[k].x_dot = path[pattern - 1].waypoints[step].x_dot[k];
                             command_packets[k].y_dot = path[pattern - 1].waypoints[step].y_dot[k];
-                            command_packets[k].z_dot = 0;
-                            command_packets[k].rpy[pattern - 1] = 0;
-                            command_packets[k].rpy[pattern - 1] = 0;
-                            command_packets[k].rpy[pattern - 1] = 0;
+                            if (RESPECT_TRAJECTORY_Z == 1 && pattern == 2) {
+                                command_packets[k].z = path[pattern - 1].waypoints[step].z[k];
+                                command_packets[k].z_dot = path[pattern - 1].waypoints[step].z_dot[k];
+                            }
+                            else {
+                                command_packets[k].z = offset_z[k];
+                                command_packets[k].z_dot = 0;
+                            }
+                            command_packets[k].rpy[0] = 0;
+                            command_packets[k].rpy[1] = 0;
+                            if (path[pattern - 1].waypoints[step].yaw_flag == 1) {
+                                // printf("enabling yaw\n");
+                                // printf("yaw received to pos %f vel %f\n", path[pattern - 1].waypoints[step].yaw[0], path[pattern - 1].waypoints[step].yaw_dot[0]);
+
+                                command_packets[k].yaw_flag = 1;
+                                command_packets[k].rpy[2] = path[pattern - 1].waypoints[step].yaw[0];
+                                command_packets[k].rpy_dot[2] = path[pattern - 1].waypoints[step].yaw_dot[0];
+                                // printf("yaw set to pos %f vel %f\n", command_packets[k].rpy[2], command_packets[k].rpy_dot[2]);
+                            }
+                            else {
+                                command_packets[k].rpy[2] = 0;
+                                command_packets[k].rpy_dot[2] = 0;
+                            }
+                            
                         }
                         break;
                 }
